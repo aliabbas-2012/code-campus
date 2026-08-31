@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique
+  password_hash String?
+  name      String
+  role      Role     @default(STUDENT)
+  status    UserStatus @default(ACTIVE)
+
+  workspace       Workspace?
+  instructor_for  InstructorStudents[] @relation("instructor")
+  student_for     InstructorStudents[] @relation("student")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+model Workspace {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id               String    @unique @db.Uuid
+  user                  User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  storage_quota_bytes   BigInt    @default(524288000) // 500 MB default
+  storage_used_bytes    BigInt    @default(0)
+  status                WorkspaceStatus @default(ACTIVE)
+
+  projects Project[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id])
+}
+
+enum WorkspaceStatus {
+  ACTIVE
+  SUSPENDED
+  DISABLED
+}
+
+model Project {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspace_id  String   @db.Uuid
+  workspace     Workspace @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+
+  files ProjectFile[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([workspace_id, name])
+  @@index([workspace_id])
+}
+
+model ProjectFile {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id    String   @db.Uuid
+  project       Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  
+  parent_id     String?  @db.Uuid
+  parent        ProjectFile? @relation("children", fields: [parent_id], references: [id], onDelete: Cascade)
+  children      ProjectFile[] @relation("children")
+  
+  name          String
+  type          FileType
+  size_bytes    BigInt   @default(0)
+  storage_path  String   // Server-generated opaque path
+  mime_type     String?
+  content       String?  // For text files, stored in DB for simplicity in Phase 1
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([project_id, parent_id, name])
+  @@index([project_id])
+  @@index([parent_id])
+}
+
+enum FileType {
+  FILE
+  FOLDER
+}
+
+model InstructorStudents {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  instructor_id String   @db.Uuid
+  instructor    User     @relation("instructor", fields: [instructor_id], references: [id], onDelete: Cascade)
+  
+  student_id    String   @db.Uuid
+  student       User     @relation("student", fields: [student_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([instructor_id, student_id])
+  @@index([instructor_id])
+  @@index([student_id])
+}
