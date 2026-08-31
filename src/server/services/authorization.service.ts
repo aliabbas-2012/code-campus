@@ -1,6 +1,7 @@
 import { getServerSession, Session } from 'next-auth';
 import { authConfig } from '@/lib/auth';
 import { db } from '@/lib/prisma';
+import { workspaceService } from '@/server/services/workspace.service';
 import { AuthorizationError } from '@/server/errors';
 
 export interface AuthContext {
@@ -37,14 +38,7 @@ export async function requireStudentWorkspace(auth: AuthContext): Promise<string
     throw new AuthorizationError('Students only', 'FORBIDDEN');
   }
 
-  const workspace = await db.workspace.findUnique({
-    where: { user_id: auth.user.id },
-  });
-
-  if (!workspace) {
-    throw new AuthorizationError('Workspace not found', 'NOT_FOUND');
-  }
-
+  const workspace = await workspaceService.getOrCreateWorkspace(auth.user.id);
   return workspace.id;
 }
 

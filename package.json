@@ -12,6 +12,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
+    "seed": "node scripts/seed.js",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
