@@ -1,21 +1,2 @@
-services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: code_campus_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: code_campus
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
+# This project does not manage Postgres via Compose — point DATABASE_URL
+# in .env.local at whatever Postgres instance you're already running.
