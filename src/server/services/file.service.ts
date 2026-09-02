@@ -170,7 +170,7 @@ export class FileService {
     name: string;
     type: string;
     content?: string;
-    size_bytes: bigint;
+    size_bytes: number;
     updated_at: Date;
   }> {
     const file = await db.projectFile.findUnique({
@@ -186,7 +186,7 @@ export class FileService {
       name: file.name,
       type: file.type,
       content: file.content || undefined,
-      size_bytes: file.size_bytes,
+      size_bytes: Number(file.size_bytes),
       updated_at: file.updated_at,
     };
   }
@@ -199,11 +199,12 @@ export class FileService {
       id: string;
       name: string;
       type: string;
-      size_bytes: bigint;
+      parent_id: string | null;
+      size_bytes: number;
       updated_at: Date;
     }>
   > {
-    return db.projectFile.findMany({
+    const files = await db.projectFile.findMany({
       where: {
         project_id: projectId,
         parent_id: parentId || null,
@@ -212,11 +213,14 @@ export class FileService {
         id: true,
         name: true,
         type: true,
+        parent_id: true,
         size_bytes: true,
         updated_at: true,
       },
       orderBy: [{ type: 'desc' }, { name: 'asc' }],
     });
+
+    return files.map((file) => ({ ...file, size_bytes: Number(file.size_bytes) }));
   }
 
   /**

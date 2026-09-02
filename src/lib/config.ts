@@ -13,7 +13,7 @@ export const CONFIG = {
   STORAGE_BASE_PATH: process.env.STORAGE_BASE_PATH || './storage',
   
   // Pyodide CDN
-  NEXT_PUBLIC_PYODIDE_CDN_URL: process.env.NEXT_PUBLIC_PYODIDE_CDN_URL || 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/',
+  NEXT_PUBLIC_PYODIDE_CDN_URL: process.env.NEXT_PUBLIC_PYODIDE_CDN_URL || 'https://cdn.jsdelivr.net/pyodide/v314.0.6/full/',
   
   // File types
   SUPPORTED_FILE_EXTENSIONS: ['.py', '.txt', '.md', '.json', '.csv'],
@@ -29,7 +29,7 @@ export const CONFIG_DERIVED = {
 };
 
 export function validateFileSize(bytes: number): boolean {
-  return bytes > 0 && bytes <= CONFIG.MAX_FILE_SIZE_BYTES;
+  return bytes >= 0 && bytes <= CONFIG.MAX_FILE_SIZE_BYTES;
 }
 
 export function validateFilename(filename: string): boolean {

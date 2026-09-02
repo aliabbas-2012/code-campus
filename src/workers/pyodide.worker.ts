@@ -8,20 +8,26 @@ declare function importScripts(...urls: string[]): void;
 let pyodideReady = false;
 let pyodide: any = null;
 
+let stdoutChunks: string[] = [];
+let stderrChunks: string[] = [];
+
 // Initialize Pyodide on worker load
 async function initPyodide(): Promise<void> {
   try {
-    const cdnUrl = 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/';
+    const cdnUrl = process.env.NEXT_PUBLIC_PYODIDE_CDN_URL || 'https://cdn.jsdelivr.net/pyodide/v314.0.6/full/';
     importScripts(`${cdnUrl}pyodide.js`);
-    
+
     // @ts-ignore - pyodide is loaded via importScripts
     pyodide = await loadPyodide({
       indexURL: cdnUrl,
+      stdout: (msg: string) => stdoutChunks.push(msg),
+      stderr: (msg: string) => stderrChunks.push(msg),
     });
-    
+
     pyodideReady = true;
     self.postMessage({ type: 'ready', data: { version: pyodide.version } });
   } catch (error) {
+    console.error('Failed to initialize Pyodide:', error);
     self.postMessage({
       type: 'error',
       data: { message: `Failed to initialize Pyodide: ${error}` },
@@ -57,49 +63,27 @@ self.onmessage = async (event: MessageEvent<Message>) => {
     }
 
     const startTime = Date.now();
-    const stdout: string[] = [];
-    const stderr: string[] = [];
+    stdoutChunks = [];
+    stderrChunks = [];
 
     try {
-      // Capture stdout/stderr
-      const oldLog = console.log;
-      const oldError = console.error;
-
-      console.log = (...args: any[]) => {
-        stdout.push(args.join(' '));
-      };
-
-      console.error = (...args: any[]) => {
-        stderr.push(args.join(' '));
-      };
-
-      // Run code
-      await pyodide.runPythonAsync(event.data.data.code, {
-        printResult: true,
-      });
-
-      // Restore console
-      console.log = oldLog;
-      console.error = oldError;
+      await pyodide.runPythonAsync(event.data.data.code);
 
       self.postMessage({
         type: 'result',
         data: {
-          stdout: stdout.join('\n'),
-          stderr: stderr.join('\n'),
+          stdout: stdoutChunks.join('\n'),
+          stderr: stderrChunks.join('\n'),
           returnCode: 0,
           executionTime: Date.now() - startTime,
         },
       });
     } catch (error: any) {
-      console.log = console.log; // Restore in case of error
-      console.error = console.error;
-
       self.postMessage({
         type: 'result',
         data: {
-          stdout: stdout.join('\n'),
-          stderr: stderr.join('\n') + (stderr.length > 0 ? '\n' : '') + String(error),
+          stdout: stdoutChunks.join('\n'),
+          stderr: stderrChunks.join('\n') + (stderrChunks.length > 0 ? '\n' : '') + String(error),
           returnCode: 1,
           executionTime: Date.now() - startTime,
         },

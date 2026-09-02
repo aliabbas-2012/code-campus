@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { AuthSessionProvider } from '@/components/providers/session-provider';
+import { QueryProvider } from '@/components/providers/query-provider';
+import { ToastProvider } from '@/components/ui/toast';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -16,7 +18,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased bg-white dark:bg-slate-950">
         <AuthSessionProvider>
-          {children}
+          <QueryProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </QueryProvider>
         </AuthSessionProvider>
       </body>
     </html>

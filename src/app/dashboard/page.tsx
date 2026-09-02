@@ -3,9 +3,10 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { ProjectList } from '@/components/dashboard/project-list';
 
 export default function DashboardPage(): React.ReactNode {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -22,25 +23,13 @@ export default function DashboardPage(): React.ReactNode {
     );
   }
 
-  if (!session) {
+  if (status !== 'authenticated') {
     return null;
   }
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome, {session.user?.name}!</h1>
-        <p className="text-gray-600 mb-8">
-          You are logged in as <span className="font-mono">{session.user?.email}</span>
-        </p>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
-          <p className="text-gray-600">
-            Projects and editor will be available soon. This is Phase 1 scaffolding.
-          </p>
-        </div>
-      </div>
+      <ProjectList />
     </div>
   );
 }

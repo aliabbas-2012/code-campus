@@ -42,8 +42,11 @@ describe('Config Validators', () => {
       expect(validateFileSize(1024 * 1024 * 11)).toBe(false);
     });
 
-    it('should reject zero and negative sizes', () => {
-      expect(validateFileSize(0)).toBe(false);
+    it('should accept an empty (zero-byte) file', () => {
+      expect(validateFileSize(0)).toBe(true);
+    });
+
+    it('should reject negative sizes', () => {
       expect(validateFileSize(-100)).toBe(false);
     });
   });
