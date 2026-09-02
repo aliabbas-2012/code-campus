@@ -2,7 +2,7 @@
  * Pyodide execution service - runs in browser via Web Worker
  * This is a client-side implementation; the backend just provides an interface.
  *
- * In Phase 1, actual execution happens in src/workers/pyodide.worker.ts
+ * In Phase 1, actual execution happens in public/workers/pyodide-worker.js
  * This service is primarily for type definitions and future remote execution.
  */
 

@@ -26,7 +26,7 @@ export function usePythonWorker(): {
   const [output, setOutput] = useState<RunResult | null>(null);
 
   const spawnWorker = useCallback(() => {
-    const worker = new Worker(new URL('../workers/pyodide.worker.ts', import.meta.url));
+    const worker = new Worker('/workers/pyodide-worker.js', { type: 'module' });
 
     worker.onmessage = (event: MessageEvent<{ type: string; data: any }>) => {
       const { type, data } = event.data;
