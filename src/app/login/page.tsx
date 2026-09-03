@@ -27,6 +27,21 @@ export default function LoginPage(): React.ReactNode {
       if (result?.error) {
         setError(result.error);
       } else if (result?.ok) {
+        // Explicitly prompt the browser's own password manager to offer saving
+        // these credentials — since this is a fetch-driven login (no full page
+        // navigation on submit), some browsers won't reliably detect it as a
+        // login otherwise. Feature-detected; no-op in browsers without support.
+        if ('credentials' in navigator && 'PasswordCredential' in window) {
+          try {
+            const credential = new (window as any).PasswordCredential({
+              id: email,
+              password,
+            });
+            await navigator.credentials.store(credential);
+          } catch {
+            // Best-effort only — never block login on this.
+          }
+        }
         router.push('/dashboard');
       }
     } catch (err) {
@@ -42,7 +57,7 @@ export default function LoginPage(): React.ReactNode {
         <h1 className="text-3xl font-bold text-center mb-2">Code Campus</h1>
         <p className="text-center text-gray-600 mb-8">Learn Python Online</p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {error}
@@ -55,7 +70,9 @@ export default function LoginPage(): React.ReactNode {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -72,7 +89,9 @@ export default function LoginPage(): React.ReactNode {
             <div className="relative mt-1">
               <input
                 id="password"
+                name="password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
