@@ -14,7 +14,6 @@ export async function GET(_req: NextRequest, { params }: RouteParams): Promise<N
   try {
     const { id } = await params;
     const auth = await getAuthContext();
-    await requireStudentWorkspace(auth);
 
     // Verify access
     await verifyProjectAccess(auth, id, 'read');

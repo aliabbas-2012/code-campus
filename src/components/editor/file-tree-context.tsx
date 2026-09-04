@@ -9,6 +9,7 @@ export interface CreatingState {
 }
 
 export interface FileTreeContextValue {
+  mode: 'edit' | 'review';
   childrenOf: Map<string | null, FileNode[]>;
   expandedIds: Set<string>;
   toggleExpand: (id: string) => void;

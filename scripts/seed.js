@@ -28,6 +28,15 @@ async function main() {
   for (const u of users) {
     console.log(`  ${u.role.padEnd(10)} ${u.email}`);
   }
+
+  const instructor = users.find((u) => u.role === 'INSTRUCTOR');
+  const student = users.find((u) => u.role === 'STUDENT');
+  await db.instructorStudents.upsert({
+    where: { instructor_id_student_id: { instructor_id: instructor.id, student_id: student.id } },
+    update: {},
+    create: { instructor_id: instructor.id, student_id: student.id },
+  });
+  console.log(`Linked ${instructor.email} -> ${student.email} on the roster.`);
 }
 
 main()

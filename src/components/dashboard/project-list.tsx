@@ -10,7 +10,8 @@ import { StorageQuotaBar } from './storage-quota-bar';
 import type { Project } from '@/types/api';
 
 export function ProjectList(): React.ReactNode {
-  const { data: projects, isLoading, isError, error, refetch } = useProjects();
+  const { data: allProjects, isLoading, isError, error, refetch } = useProjects();
+  const projects = allProjects?.filter((p) => !p.assignment_id);
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();

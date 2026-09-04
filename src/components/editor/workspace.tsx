@@ -9,25 +9,31 @@ import { queryKeys } from '@/lib/query-keys';
 import { useToast } from '@/components/ui/toast';
 import { usePythonWorker } from '@/hooks/use-python-worker';
 import { useAutosave } from '@/hooks/use-autosave';
+import { useProject } from '@/hooks/use-projects';
 import { FileTree } from './file-tree';
 import { EditorTabs } from './editor-tabs';
 import { CodeEditor } from './code-editor';
 import { OutputPanel } from './output-panel';
 import { RunButton } from './run-button';
+import { SubmissionBar } from './submission-bar';
 import { StorageQuotaBar } from '@/components/dashboard/storage-quota-bar';
 import type { OpenTab } from './types';
 import type { FileNode } from '@/types/api';
 
 interface WorkspaceProps {
   projectId: string;
+  mode?: 'edit' | 'review';
+  onBack?: () => void;
+  extraBar?: React.ReactNode;
 }
 
-export function Workspace({ projectId }: WorkspaceProps): React.ReactNode {
+export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: WorkspaceProps): React.ReactNode {
   const router = useRouter();
   const { status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { status: workerStatus, errorMessage: workerErrorMessage, isRunning, output, run } = usePythonWorker();
+  const { data: project } = useProject(projectId);
 
   const [tabs, setTabs] = useState<OpenTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
@@ -39,7 +45,7 @@ export function Workspace({ projectId }: WorkspaceProps): React.ReactNode {
     setTabs((prev) => prev.map((t) => (t.fileId === fileId ? { ...t, ...patch } : t)));
   }, []);
 
-  const { flush } = useAutosave(activeTab, updateTab);
+  const { flush } = useAutosave(activeTab, updateTab, mode === 'edit');
 
   const handleOpenFile = useCallback(
     async (file: FileNode): Promise<void> => {
@@ -151,17 +157,19 @@ export function Workspace({ projectId }: WorkspaceProps): React.ReactNode {
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
         <button
           type="button"
-          onClick={() => router.push('/dashboard')}
+          onClick={onBack ?? (() => router.push('/dashboard'))}
           className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          Projects
+          {mode === 'review' ? 'Back' : 'Projects'}
         </button>
-        <div className="w-48">
-          <StorageQuotaBar />
-        </div>
+        {mode === 'edit' && (
+          <div className="w-48">
+            <StorageQuotaBar />
+          </div>
+        )}
         <RunButton
           disabled={workerStatus !== 'ready' || isRunning || !activeTab}
           isRunning={isRunning}
@@ -169,9 +177,12 @@ export function Workspace({ projectId }: WorkspaceProps): React.ReactNode {
         />
       </div>
 
+      {mode === 'edit' && project?.assignment_id && <SubmissionBar projectId={projectId} />}
+      {extraBar}
+
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-64 shrink-0 border-r border-gray-200 overflow-y-auto">
-          <FileTree projectId={projectId} onOpenFile={handleOpenFile} />
+          <FileTree projectId={projectId} onOpenFile={handleOpenFile} mode={mode} />
         </aside>
 
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -185,7 +196,7 @@ export function Workspace({ projectId }: WorkspaceProps): React.ReactNode {
           <div className="flex flex-1 flex-col overflow-hidden">
             {activeTab ? (
               <>
-                {activeTab.saveStatus === 'conflict' && (
+                {mode === 'edit' && activeTab.saveStatus === 'conflict' && (
                   <div className="flex items-center justify-between bg-amber-50 px-4 py-2 text-sm text-amber-800">
                     <span>This file changed elsewhere since you opened it. Your local changes have not been saved.</span>
                     <button
@@ -201,7 +212,8 @@ export function Workspace({ projectId }: WorkspaceProps): React.ReactNode {
                   <CodeEditor
                     filename={activeTab.name}
                     value={activeTab.content}
-                    onChange={(content) => updateTab(activeTab.fileId, { content })}
+                    onChange={mode === 'edit' ? (content) => updateTab(activeTab.fileId, { content }) : undefined}
+                    readOnly={mode === 'review'}
                   />
                 </div>
               </>

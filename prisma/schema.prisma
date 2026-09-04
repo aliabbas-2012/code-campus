@@ -22,6 +22,12 @@ model User {
   instructor_for  InstructorStudents[] @relation("instructor")
   student_for     InstructorStudents[] @relation("student")
 
+  assignments_created    Assignment[]        @relation("instructor_assignments")
+  assigned_assignments   AssignmentStudent[] @relation("assigned_student")
+  submissions_as_student Submission[]        @relation("submitting_student")
+  submissions_graded     Submission[]        @relation("grading_instructor")
+  submission_events      SubmissionEvent[]   @relation("submission_event_actor")
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -69,12 +75,17 @@ model Project {
   name          String
   description   String?
 
+  assignment_id String?     @db.Uuid
+  assignment    Assignment? @relation(fields: [assignment_id], references: [id], onDelete: Cascade)
+  submission    Submission?
+
   files ProjectFile[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   @@unique([workspace_id, name])
+  @@unique([assignment_id, workspace_id])
   @@index([workspace_id])
 }
 
@@ -120,4 +131,97 @@ model InstructorStudents {
   @@unique([instructor_id, student_id])
   @@index([instructor_id])
   @@index([student_id])
+}
+
+model Assignment {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  instructor_id  String  @db.Uuid
+  instructor     User    @relation("instructor_assignments", fields: [instructor_id], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  max_score      Int     @default(100)
+  pass_threshold Int     @default(60)
+
+  assigned_students AssignmentStudent[]
+  projects          Project[]
+  submissions       Submission[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([instructor_id])
+}
+
+model AssignmentStudent {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  assignment_id String     @db.Uuid
+  assignment    Assignment @relation(fields: [assignment_id], references: [id], onDelete: Cascade)
+
+  student_id String @db.Uuid
+  student    User   @relation("assigned_student", fields: [student_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([assignment_id, student_id])
+  @@index([assignment_id])
+  @@index([student_id])
+}
+
+model Submission {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id    String     @unique @db.Uuid
+  project       Project    @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  assignment_id String     @db.Uuid
+  assignment    Assignment @relation(fields: [assignment_id], references: [id], onDelete: Cascade)
+  student_id    String     @db.Uuid
+  student       User       @relation("submitting_student", fields: [student_id], references: [id], onDelete: Cascade)
+
+  status SubmissionStatus @default(IN_PROGRESS)
+
+  score     Int?
+  passed    Boolean?
+  submitted_at DateTime?
+  graded_at    DateTime?
+
+  graded_by_id String? @db.Uuid
+  graded_by    User?   @relation("grading_instructor", fields: [graded_by_id], references: [id], onDelete: SetNull)
+
+  events SubmissionEvent[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([assignment_id])
+  @@index([student_id])
+  @@index([status])
+}
+
+enum SubmissionStatus {
+  IN_PROGRESS
+  SUBMITTED
+  REVISION_REQUESTED
+  GRADED
+}
+
+model SubmissionEvent {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  submission_id String     @db.Uuid
+  submission    Submission @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+
+  type     SubmissionEventType
+  actor_id String              @db.Uuid
+  actor    User                @relation("submission_event_actor", fields: [actor_id], references: [id], onDelete: Cascade)
+
+  feedback String?
+  score    Int?
+
+  created_at DateTime @default(now())
+
+  @@index([submission_id])
+}
+
+enum SubmissionEventType {
+  SUBMITTED
+  REVISION_REQUESTED
+  GRADED
 }

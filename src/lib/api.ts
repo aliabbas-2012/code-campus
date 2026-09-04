@@ -10,6 +10,20 @@ import type {
   UpdateFileInput,
   UpdateFileResult,
   CreatedFile,
+  AdminUser,
+  CreateUserInput,
+  RosterLink,
+  CreateInstructorStudentInput,
+  AssignmentSummary,
+  AssignmentDetail,
+  CreateAssignmentInput,
+  AddAssignmentStudentsInput,
+  StudentAssignmentSummary,
+  StudentAssignmentDetail,
+  StartAssignmentResult,
+  SubmissionDetail,
+  SubmissionActionInput,
+  UserRole,
 } from '@/types/api';
 
 export class ApiError extends Error {
@@ -75,5 +89,53 @@ export const api = {
   },
   workspace: {
     storage: (): Promise<StorageInfo> => apiFetch('/api/workspace/storage'),
+  },
+  admin: {
+    users: {
+      list: (role?: UserRole): Promise<AdminUser[]> =>
+        apiFetch(`/api/admin/users${role ? `?role=${role}` : ''}`),
+      create: (input: CreateUserInput): Promise<AdminUser> =>
+        apiFetch('/api/admin/users', { method: 'POST', body: JSON.stringify(input) }),
+    },
+    roster: {
+      list: (): Promise<RosterLink[]> => apiFetch('/api/admin/instructor-students'),
+      create: (input: CreateInstructorStudentInput): Promise<{ id: string }> =>
+        apiFetch('/api/admin/instructor-students', { method: 'POST', body: JSON.stringify(input) }),
+      remove: (id: string): Promise<{ success: true }> =>
+        apiFetch(`/api/admin/instructor-students/${id}`, { method: 'DELETE' }),
+    },
+  },
+  instructor: {
+    roster: {
+      list: (): Promise<RosterLink[]> => apiFetch('/api/instructor/students'),
+    },
+    assignments: {
+      list: (): Promise<AssignmentSummary[]> => apiFetch('/api/instructor/assignments'),
+      create: (input: CreateAssignmentInput): Promise<{ id: string; title: string }> =>
+        apiFetch('/api/instructor/assignments', { method: 'POST', body: JSON.stringify(input) }),
+      get: (id: string): Promise<AssignmentDetail> => apiFetch(`/api/instructor/assignments/${id}`),
+      addStudents: (id: string, input: AddAssignmentStudentsInput): Promise<{ success: true }> =>
+        apiFetch(`/api/instructor/assignments/${id}/students`, {
+          method: 'POST',
+          body: JSON.stringify(input),
+        }),
+    },
+  },
+  student: {
+    assignments: {
+      list: (): Promise<StudentAssignmentSummary[]> => apiFetch('/api/student/assignments'),
+      get: (id: string): Promise<StudentAssignmentDetail> => apiFetch(`/api/student/assignments/${id}`),
+      start: (id: string): Promise<StartAssignmentResult> =>
+        apiFetch(`/api/student/assignments/${id}/start`, { method: 'POST' }),
+    },
+  },
+  submissions: {
+    get: (projectId: string): Promise<SubmissionDetail | null> =>
+      apiFetch(`/api/projects/${projectId}/submission`),
+    act: (projectId: string, input: SubmissionActionInput): Promise<SubmissionDetail> =>
+      apiFetch(`/api/projects/${projectId}/submission`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
   },
 };

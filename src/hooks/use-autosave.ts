@@ -10,6 +10,7 @@ const AUTOSAVE_DEBOUNCE_MS = 1500;
 export function useAutosave(
   tab: OpenTab | undefined,
   updateTab: (fileId: string, patch: Partial<OpenTab>) => void,
+  enabled: boolean = true,
 ): { flush: () => void } {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -44,6 +45,7 @@ export function useAutosave(
   );
 
   useEffect(() => {
+    if (!enabled) return;
     if (!tab) return;
     if (tab.content === tab.lastSavedContent) return;
     if (tab.saveStatus !== 'unsaved') {
@@ -56,13 +58,13 @@ export function useAutosave(
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab?.content, tab?.fileId]);
+  }, [tab?.content, tab?.fileId, enabled]);
 
   const flush = useCallback(() => {
-    if (tab && tab.content !== tab.lastSavedContent && tab.saveStatus !== 'saving') {
+    if (enabled && tab && tab.content !== tab.lastSavedContent && tab.saveStatus !== 'saving') {
       save(tab);
     }
-  }, [tab, save]);
+  }, [enabled, tab, save]);
 
   return { flush };
 }

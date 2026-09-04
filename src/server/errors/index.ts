@@ -74,7 +74,17 @@ export function errorToResponse(error: unknown): { statusCode: number; message: 
       code: error.code,
     };
   }
-  
+
+  if (error && typeof error === 'object' && 'issues' in error && Array.isArray((error as { issues: unknown }).issues)) {
+    // A Zod validation error (duck-typed to avoid an import dependency here).
+    const issues = (error as { issues: Array<{ message: string }> }).issues;
+    return {
+      statusCode: 400,
+      message: issues[0]?.message || 'Invalid request',
+      code: 'VALIDATION_ERROR',
+    };
+  }
+
   return {
     statusCode: 500,
     message: 'Internal server error',

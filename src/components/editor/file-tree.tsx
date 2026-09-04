@@ -19,9 +19,10 @@ import type { FileNode } from '@/types/api';
 interface FileTreeProps {
   projectId: string;
   onOpenFile: (file: FileNode) => void;
+  mode?: 'edit' | 'review';
 }
 
-export function FileTree({ projectId, onOpenFile }: FileTreeProps): React.ReactNode {
+export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps): React.ReactNode {
   const { data: files, isLoading, isError } = useProjectFiles(projectId);
   const createFile = useCreateFile(projectId);
   const createFolder = useCreateFolder(projectId);
@@ -109,6 +110,7 @@ export function FileTree({ projectId, onOpenFile }: FileTreeProps): React.ReactN
   return (
     <FileTreeContext.Provider
       value={{
+        mode,
         childrenOf,
         expandedIds,
         toggleExpand,
@@ -126,22 +128,24 @@ export function FileTree({ projectId, onOpenFile }: FileTreeProps): React.ReactN
       }}
     >
       <div className="flex h-full flex-col">
-        <div className="flex items-center gap-1 border-b border-gray-200 px-2 py-1.5">
-          <button
-            type="button"
-            onClick={() => startCreate('file')}
-            className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
-          >
-            + File
-          </button>
-          <button
-            type="button"
-            onClick={() => startCreate('folder')}
-            className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
-          >
-            + Folder
-          </button>
-        </div>
+        {mode === 'edit' && (
+          <div className="flex items-center gap-1 border-b border-gray-200 px-2 py-1.5">
+            <button
+              type="button"
+              onClick={() => startCreate('file')}
+              className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+            >
+              + File
+            </button>
+            <button
+              type="button"
+              onClick={() => startCreate('folder')}
+              className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+            >
+              + Folder
+            </button>
+          </div>
+        )}
         <div
           className="flex-1 overflow-y-auto py-1"
           onClick={() => setSelectedFolderId(null)}

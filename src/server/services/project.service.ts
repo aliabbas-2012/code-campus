@@ -42,6 +42,7 @@ export class ProjectService {
     name: string;
     description: string | null;
     workspace_id: string;
+    assignment_id: string | null;
   }> {
     const project = await db.project.findUnique({
       where: { id: projectId },
@@ -50,6 +51,7 @@ export class ProjectService {
         name: true,
         description: true,
         workspace_id: true,
+        assignment_id: true,
       },
     });
 
@@ -61,7 +63,7 @@ export class ProjectService {
   }
 
   async listProjects(workspaceId: string): Promise<
-    Array<{ id: string; name: string; description: string | null }>
+    Array<{ id: string; name: string; description: string | null; assignment_id: string | null }>
   > {
     return db.project.findMany({
       where: { workspace_id: workspaceId },
@@ -69,6 +71,7 @@ export class ProjectService {
         id: true,
         name: true,
         description: true,
+        assignment_id: true,
       },
       orderBy: { created_at: 'desc' },
     });

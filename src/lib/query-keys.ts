@@ -4,4 +4,12 @@ export const queryKeys = {
   files: (projectId: string) => ['projects', projectId, 'files'] as const,
   file: (fileId: string) => ['files', fileId] as const,
   storage: ['workspace', 'storage'] as const,
+  adminUsers: (role?: string) => ['admin', 'users', role ?? 'all'] as const,
+  adminRoster: ['admin', 'roster'] as const,
+  instructorRoster: ['instructor', 'roster'] as const,
+  instructorAssignments: ['instructor', 'assignments'] as const,
+  instructorAssignment: (id: string) => ['instructor', 'assignments', id] as const,
+  studentAssignments: ['student', 'assignments'] as const,
+  studentAssignment: (id: string) => ['student', 'assignments', id] as const,
+  submission: (projectId: string) => ['projects', projectId, 'submission'] as const,
 };

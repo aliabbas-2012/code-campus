@@ -19,20 +19,22 @@ function languageForFilename(name: string): string {
 interface CodeEditorProps {
   filename: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
+  readOnly?: boolean;
 }
 
-export function CodeEditor({ filename, value, onChange }: CodeEditorProps): React.ReactNode {
+export function CodeEditor({ filename, value, onChange, readOnly = false }: CodeEditorProps): React.ReactNode {
   return (
     <Editor
       height="100%"
       language={languageForFilename(filename)}
       value={value}
-      onChange={(v) => onChange(v ?? '')}
+      onChange={(v) => onChange?.(v ?? '')}
       options={{
         minimap: { enabled: false },
         fontSize: 14,
         automaticLayout: true,
+        readOnly,
       }}
     />
   );

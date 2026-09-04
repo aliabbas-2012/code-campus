@@ -75,7 +75,7 @@ export function FileTreeNode({ node, depth }: FileTreeNodeProps): React.ReactNod
             <span className="truncate text-gray-800">{node.name}</span>
           )}
         </button>
-        {!isRenaming && (
+        {!isRenaming && ctx.mode === 'edit' && (
           <div className="flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100">
             <button
               type="button"
