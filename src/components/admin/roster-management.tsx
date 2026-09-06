@@ -5,6 +5,7 @@ import { useAdminUsers } from '@/hooks/use-admin-users';
 import { useAdminRoster, useCreateRosterLink, useRemoveRosterLink } from '@/hooks/use-admin-roster';
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 export function RosterManagement(): React.ReactNode {
   const { data: instructors } = useAdminUsers('INSTRUCTOR');
@@ -15,26 +16,19 @@ export function RosterManagement(): React.ReactNode {
   const { showToast } = useToast();
 
   const [instructorId, setInstructorId] = useState<string>('');
-  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
   const rosterForInstructor = useMemo(
     () => (links ?? []).filter((link) => link.instructor?.id === instructorId),
     [links, instructorId],
   );
 
-  const availableStudents = useMemo(() => {
+  const availableOptions = useMemo(() => {
     const onRoster = new Set(rosterForInstructor.map((link) => link.student.id));
-    return (students ?? []).filter((s) => !onRoster.has(s.id));
+    return (students ?? [])
+      .filter((s) => !onRoster.has(s.id))
+      .map((s) => ({ id: s.id, label: s.name, sublabel: s.email }));
   }, [students, rosterForInstructor]);
-
-  const toggleStudent = (id: string): void => {
-    setSelectedStudentIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   const handleAdd = async (): Promise<void> => {
     for (const studentId of selectedStudentIds) {
@@ -44,7 +38,7 @@ export function RosterManagement(): React.ReactNode {
         showToast(err instanceof ApiError ? err.message : 'Failed to add student');
       }
     }
-    setSelectedStudentIds(new Set());
+    setSelectedStudentIds([]);
   };
 
   const handleRemove = (id: string): void => {
@@ -104,27 +98,18 @@ export function RosterManagement(): React.ReactNode {
 
           <div className="rounded-lg border border-gray-200 bg-white p-4">
             <h2 className="text-sm font-semibold text-gray-900">Add students</h2>
-            <ul className="mt-3 max-h-64 space-y-1 overflow-y-auto">
-              {availableStudents.map((s) => (
-                <li key={s.id}>
-                  <label className="flex items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50">
-                    <input
-                      type="checkbox"
-                      checked={selectedStudentIds.has(s.id)}
-                      onChange={() => toggleStudent(s.id)}
-                    />
-                    {s.name} <span className="text-gray-400">({s.email})</span>
-                  </label>
-                </li>
-              ))}
-              {availableStudents.length === 0 && (
-                <p className="text-sm text-gray-400">All students are already on this roster.</p>
-              )}
-            </ul>
+            <div className="mt-3">
+              <MultiSelect
+                options={availableOptions}
+                selected={selectedStudentIds}
+                onChange={setSelectedStudentIds}
+                placeholder={availableOptions.length === 0 ? 'All students are already on this roster' : 'Search students…'}
+              />
+            </div>
             <button
               type="button"
               onClick={handleAdd}
-              disabled={selectedStudentIds.size === 0 || createLink.isPending}
+              disabled={selectedStudentIds.length === 0 || createLink.isPending}
               className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               Add Selected

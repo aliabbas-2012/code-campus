@@ -158,7 +158,7 @@ export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps
           {creating?.parentId === null && (
             <div className="flex items-center gap-1.5 px-1 py-1" style={{ paddingLeft: '24px' }}>
               {creating.type === 'folder' ? FOLDER_ICON : FILE_ICON}
-              <InlineNameInput onSubmit={submitCreate} onCancel={() => setCreating(null)} />
+              <InlineNameInput type={creating.type} onSubmit={submitCreate} onCancel={() => setCreating(null)} />
             </div>
           )}
           {rootNodes.length === 0 && !creating && (

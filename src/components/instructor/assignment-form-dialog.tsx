@@ -1,15 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { useInstructorRoster } from '@/hooks/use-instructor-roster';
 import { ApiError } from '@/lib/api';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 export interface AssignmentFormValues {
   title: string;
   description: string;
   max_score: number;
   pass_threshold: number;
+  starter_code?: string;
+}
+
+const MAX_STARTER_CODE_BYTES = 50000;
+
+function validateStarterCodeFile(file: File): string | null {
+  if (!file.name.toLowerCase().endsWith('.py')) {
+    return 'Only .py files can be imported as starter code';
+  }
+  if (file.size > MAX_STARTER_CODE_BYTES) {
+    return `File is too large (max ${Math.floor(MAX_STARTER_CODE_BYTES / 1000)}KB)`;
+  }
+  return null;
 }
 
 interface AssignmentFormDialogProps {
@@ -26,14 +41,47 @@ export function AssignmentFormDialog({
   onClose,
 }: AssignmentFormDialogProps): React.ReactNode {
   const { data: roster } = useInstructorRoster();
-  const [studentIds, setStudentIds] = useState<Set<string>>(new Set());
+  const [studentIds, setStudentIds] = useState<string[]>([]);
+  const [starterFileName, setStarterFileName] = useState<string | null>(null);
+  const [starterFileError, setStarterFileError] = useState<string | null>(null);
+  const [starterCode, setStarterCode] = useState<string | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<AssignmentFormValues>({
     defaultValues: { title: '', description: '', max_score: 100, pass_threshold: 60 },
   });
+
+  const handleStarterFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    const validationError = validateStarterCodeFile(file);
+    if (validationError) {
+      setStarterFileError(validationError);
+      return;
+    }
+
+    const text = await file.text();
+    if (text.includes('\u0000')) {
+      setStarterFileError('File looks like a binary file, not Python source');
+      return;
+    }
+
+    setStarterFileError(null);
+    setStarterFileName(file.name);
+    setStarterCode(text);
+  };
+
+  const handleRemoveStarterFile = (): void => {
+    setStarterFileName(null);
+    setStarterFileError(null);
+    setStarterCode(undefined);
+  };
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent): void => {
@@ -43,23 +91,19 @@ export function AssignmentFormDialog({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  const toggleStudent = (id: string): void => {
-    setStudentIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const rosterOptions = useMemo(
+    () => (roster ?? []).map((link) => ({ id: link.student.id, label: link.student.name, sublabel: link.student.email })),
+    [roster],
+  );
 
   const submit = (values: AssignmentFormValues): void => {
-    onSubmit(values, Array.from(studentIds));
+    onSubmit({ ...values, starter_code: starterCode }, studentIds);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-gray-900">New Assignment</h2>
@@ -78,16 +122,18 @@ export function AssignmentFormDialog({
           </div>
 
           <div>
-            <label htmlFor="assignment-description" className="block text-sm font-medium text-gray-700">
+            <p className="block text-sm font-medium text-gray-700">
               Description <span className="text-gray-400">(optional)</span>
-            </label>
-            <textarea
-              id="assignment-description"
-              rows={3}
-              {...register('description')}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
-              disabled={isSubmitting}
-            />
+            </p>
+            <div className="mt-1">
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <RichTextEditor value={field.value} onChange={field.onChange} disabled={isSubmitting} />
+                )}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -115,26 +161,58 @@ export function AssignmentFormDialog({
 
           <div>
             <p className="block text-sm font-medium text-gray-700">Assign to</p>
-            <ul className="mt-1 max-h-40 space-y-1 overflow-y-auto rounded-lg border border-gray-200 p-2">
-              {roster?.map((link) => (
-                <li key={link.id}>
-                  <label className="flex items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50">
-                    <input
-                      type="checkbox"
-                      checked={studentIds.has(link.student.id)}
-                      onChange={() => toggleStudent(link.student.id)}
-                    />
-                    {link.student.name}
-                  </label>
-                </li>
-              ))}
-              {roster?.length === 0 && (
-                <p className="px-1 py-2 text-sm text-gray-400">No students on your roster yet.</p>
-              )}
-            </ul>
-            {studentIds.size === 0 && (
+            <div className="mt-1">
+              <MultiSelect
+                options={rosterOptions}
+                selected={studentIds}
+                onChange={setStudentIds}
+                placeholder={rosterOptions.length === 0 ? 'No students on your roster yet' : 'Search students…'}
+              />
+            </div>
+            {studentIds.length === 0 && (
               <p className="mt-1 text-sm text-gray-400">Select at least one student.</p>
             )}
+          </div>
+
+          <div>
+            <p className="block text-sm font-medium text-gray-700">
+              Starter code <span className="text-gray-400">(optional)</span>
+            </p>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Import a .py file to seed as solution.py in every student&apos;s project.
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".py,text/x-python"
+              onChange={handleStarterFileChange}
+              className="hidden"
+            />
+            {!starterCode ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSubmitting}
+                className="mt-1 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Import .py file…
+              </button>
+            ) : (
+              <div className="mt-1 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5">
+                <span className="truncate text-sm text-gray-700">
+                  {starterFileName} · {starterCode.split('\n').length} lines
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRemoveStarterFile}
+                  disabled={isSubmitting}
+                  className="ml-2 shrink-0 text-xs font-medium text-gray-500 hover:text-red-600"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+            {starterFileError && <p className="mt-1 text-sm text-red-600">{starterFileError}</p>}
           </div>
 
           {submitError instanceof ApiError && <p className="text-sm text-red-600">{submitError.message}</p>}
@@ -150,7 +228,7 @@ export function AssignmentFormDialog({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || studentIds.size === 0}
+              disabled={isSubmitting || studentIds.length === 0}
               className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               {isSubmitting ? 'Creating…' : 'Create Assignment'}

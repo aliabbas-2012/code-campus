@@ -68,6 +68,7 @@ export function FileTreeNode({ node, depth }: FileTreeNodeProps): React.ReactNod
           {isRenaming ? (
             <InlineNameInput
               defaultValue={node.name}
+              type={isFolder ? 'folder' : 'file'}
               onSubmit={(name) => ctx.submitRename(node.id, name)}
               onCancel={ctx.cancelRename}
             />
@@ -120,7 +121,7 @@ export function FileTreeNode({ node, depth }: FileTreeNodeProps): React.ReactNod
               style={{ paddingLeft: `${(depth + 1) * 16 + 4 + 14 + 6}px` }}
             >
               {ctx.creating?.type === 'folder' ? FOLDER_ICON : FILE_ICON}
-              <InlineNameInput onSubmit={ctx.submitCreate} onCancel={ctx.cancelCreate} />
+              <InlineNameInput type={ctx.creating?.type ?? 'file'} onSubmit={ctx.submitCreate} onCancel={ctx.cancelCreate} />
             </div>
           )}
         </div>

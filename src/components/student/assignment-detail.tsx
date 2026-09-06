@@ -5,6 +5,7 @@ import { useStudentAssignment, useStartAssignment } from '@/hooks/use-student-as
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api';
 import { SubmissionTimeline } from '@/components/shared/submission-timeline';
+import { RichTextContent } from '@/components/ui/rich-text-content';
 
 const STATUS_LABELS: Record<string, string> = {
   IN_PROGRESS: 'In progress',
@@ -37,7 +38,7 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
       <p className="mt-1 text-sm text-gray-500">
         From {assignment.instructor.name} · pass at {assignment.pass_threshold}/{assignment.max_score}
       </p>
-      {assignment.description && <p className="mt-4 text-gray-700">{assignment.description}</p>}
+      {assignment.description && <RichTextContent html={assignment.description} className="mt-4 text-gray-700" />}
 
       <div className="mt-6 rounded-lg border border-gray-200 bg-white p-5">
         {!assignment.project_id ? (
@@ -69,7 +70,7 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
                 onClick={() => router.push(`/projects/${assignment.project_id}`)}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
-                Continue
+                Resume
               </button>
             </div>
             {assignment.submission && assignment.submission.events.length > 0 && (

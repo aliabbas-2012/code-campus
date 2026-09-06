@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { ApiError } from '@/lib/api';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 export interface ProjectFormValues {
   name: string;
@@ -31,6 +32,7 @@ export function ProjectFormDialog({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<ProjectFormValues>({
     defaultValues: defaultValues ?? { name: '', description: '' },
@@ -79,19 +81,18 @@ export function ProjectFormDialog({
           </div>
 
           <div>
-            <label htmlFor="project-description" className="block text-sm font-medium text-gray-700">
+            <p className="block text-sm font-medium text-gray-700">
               Description <span className="text-gray-400">(optional)</span>
-            </label>
-            <textarea
-              id="project-description"
-              rows={3}
-              {...register('description', { maxLength: 500 })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
-              disabled={isSubmitting}
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
-            )}
+            </p>
+            <div className="mt-1">
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <RichTextEditor value={field.value} onChange={field.onChange} disabled={isSubmitting} />
+                )}
+              />
+            </div>
           </div>
 
           {submitError instanceof ApiError && !isDuplicateNameError && (

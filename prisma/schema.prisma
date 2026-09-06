@@ -27,6 +27,11 @@ model User {
   submissions_as_student Submission[]        @relation("submitting_student")
   submissions_graded     Submission[]        @relation("grading_instructor")
   submission_events      SubmissionEvent[]   @relation("submission_event_actor")
+  line_comments_authored LineComment[]       @relation("line_comment_author")
+  notifications          Notification[]      @relation("notification_recipient")
+  guidelines             Guidelines?         @relation("guidelines_owner")
+
+  last_active_at DateTime?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -105,6 +110,8 @@ model ProjectFile {
   mime_type     String?
   content       String?  // For text files, stored in DB for simplicity in Phase 1
 
+  line_comments LineComment[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -141,6 +148,7 @@ model Assignment {
   description    String?
   max_score      Int     @default(100)
   pass_threshold Int     @default(60)
+  starter_code   String? // Seeded as solution.py into each student's project when they start the assignment
 
   assigned_students AssignmentStudent[]
   projects          Project[]
@@ -187,6 +195,7 @@ model Submission {
   graded_by    User?   @relation("grading_instructor", fields: [graded_by_id], references: [id], onDelete: SetNull)
 
   events SubmissionEvent[]
+  line_comments LineComment[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -220,8 +229,78 @@ model SubmissionEvent {
   @@index([submission_id])
 }
 
+model LineComment {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  submission_id String     @db.Uuid
+  submission    Submission @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+  file_id       String      @db.Uuid
+  file          ProjectFile @relation(fields: [file_id], references: [id], onDelete: Cascade)
+
+  line_number Int
+  comment     String
+
+  author_id String @db.Uuid
+  author    User   @relation("line_comment_author", fields: [author_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@index([submission_id])
+  @@index([file_id])
+}
+
 enum SubmissionEventType {
   SUBMITTED
   REVISION_REQUESTED
   GRADED
+  CANCELLED
+}
+
+model Notification {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient_id String   @db.Uuid
+  recipient    User     @relation("notification_recipient", fields: [recipient_id], references: [id], onDelete: Cascade)
+
+  type    NotificationType
+  title   String
+  message String
+  link    String?
+
+  read    Boolean   @default(false)
+  read_at DateTime?
+
+  created_at DateTime @default(now())
+
+  @@index([recipient_id])
+  @@index([recipient_id, read])
+}
+
+enum NotificationType {
+  SUBMISSION_RECEIVED
+  REVISION_REQUESTED
+  GRADED
+  SUBMISSION_CANCELLED
+}
+
+model Guidelines {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  instructor_id String   @unique @db.Uuid
+  instructor    User     @relation("guidelines_owner", fields: [instructor_id], references: [id], onDelete: Cascade)
+  content       String
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+}
+
+model SmtpSettings {
+  id         String  @id @default("singleton")
+  host       String
+  port       Int     @default(587)
+  secure     Boolean @default(false)
+  username   String?
+  password   String?
+  from_email String
+  from_name  String  @default("Code Campus")
+  enabled    Boolean @default(false)
+
+  updated_at DateTime @updatedAt
 }

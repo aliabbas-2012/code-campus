@@ -24,6 +24,13 @@ import type {
   SubmissionDetail,
   SubmissionActionInput,
   UserRole,
+  LineComment,
+  CreateLineCommentInput,
+  NotificationsResponse,
+  Guidelines,
+  SmtpSettings,
+  InstructorStudentAssignment,
+  InstructorReportRow,
 } from '@/types/api';
 
 export class ApiError extends Error {
@@ -87,6 +94,11 @@ export const api = {
     remove: (fileId: string): Promise<{ success: true }> =>
       apiFetch(`/api/files/${fileId}`, { method: 'DELETE' }),
   },
+  lineComments: {
+    list: (fileId: string): Promise<LineComment[]> => apiFetch(`/api/files/${fileId}/comments`),
+    create: (fileId: string, input: CreateLineCommentInput): Promise<LineComment> =>
+      apiFetch(`/api/files/${fileId}/comments`, { method: 'POST', body: JSON.stringify(input) }),
+  },
   workspace: {
     storage: (): Promise<StorageInfo> => apiFetch('/api/workspace/storage'),
   },
@@ -104,10 +116,17 @@ export const api = {
       remove: (id: string): Promise<{ success: true }> =>
         apiFetch(`/api/admin/instructor-students/${id}`, { method: 'DELETE' }),
     },
+    smtpSettings: {
+      get: (): Promise<SmtpSettings | null> => apiFetch('/api/admin/smtp-settings'),
+      update: (input: SmtpSettings): Promise<SmtpSettings> =>
+        apiFetch('/api/admin/smtp-settings', { method: 'PUT', body: JSON.stringify(input) }),
+    },
   },
   instructor: {
     roster: {
       list: (): Promise<RosterLink[]> => apiFetch('/api/instructor/students'),
+      studentAssignments: (studentId: string): Promise<InstructorStudentAssignment[]> =>
+        apiFetch(`/api/instructor/students/${studentId}/assignments`),
     },
     assignments: {
       list: (): Promise<AssignmentSummary[]> => apiFetch('/api/instructor/assignments'),
@@ -120,6 +139,12 @@ export const api = {
           body: JSON.stringify(input),
         }),
     },
+    guidelines: {
+      get: (): Promise<Guidelines> => apiFetch('/api/instructor/guidelines'),
+      update: (content: string): Promise<Guidelines> =>
+        apiFetch('/api/instructor/guidelines', { method: 'PUT', body: JSON.stringify({ content }) }),
+    },
+    report: (): Promise<InstructorReportRow[]> => apiFetch('/api/instructor/report'),
   },
   student: {
     assignments: {
@@ -127,6 +152,9 @@ export const api = {
       get: (id: string): Promise<StudentAssignmentDetail> => apiFetch(`/api/student/assignments/${id}`),
       start: (id: string): Promise<StartAssignmentResult> =>
         apiFetch(`/api/student/assignments/${id}/start`, { method: 'POST' }),
+    },
+    guidelines: {
+      get: (): Promise<Guidelines> => apiFetch('/api/student/guidelines'),
     },
   },
   submissions: {
@@ -137,5 +165,15 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(input),
       }),
+  },
+  notifications: {
+    list: (): Promise<NotificationsResponse> => apiFetch('/api/notifications'),
+    markRead: (id: string): Promise<{ success: true }> =>
+      apiFetch(`/api/notifications/${id}/read`, { method: 'POST' }),
+    markAllRead: (): Promise<{ success: true }> =>
+      apiFetch('/api/notifications/mark-all-read', { method: 'POST' }),
+  },
+  presence: {
+    ping: (): Promise<{ success: true }> => apiFetch('/api/presence/ping', { method: 'POST' }),
   },
 };

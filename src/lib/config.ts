@@ -32,6 +32,13 @@ export function validateFileSize(bytes: number): boolean {
   return bytes >= 0 && bytes <= CONFIG.MAX_FILE_SIZE_BYTES;
 }
 
+export function validateFileExtension(filename: string): boolean {
+  const dotIndex = filename.lastIndexOf('.');
+  if (dotIndex <= 0) return false; // no extension, or a dotfile like ".env"
+  const ext = filename.slice(dotIndex).toLowerCase();
+  return (CONFIG.SUPPORTED_FILE_EXTENSIONS as readonly string[]).includes(ext);
+}
+
 export function validateFilename(filename: string): boolean {
   // Check pattern
   if (!CONFIG.VALID_FILENAME_PATTERN.test(filename)) {

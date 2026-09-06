@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { RichTextContent } from '@/components/ui/rich-text-content';
 import type { Project } from '@/types/api';
 
 interface ProjectCardProps {
@@ -50,9 +51,11 @@ export function ProjectCard({ project, onRename, onDelete }: ProjectCardProps): 
           </button>
         </div>
       </div>
-      <p className="mt-2 line-clamp-2 text-sm text-gray-500">
-        {project.description || 'No description'}
-      </p>
+      {project.description ? (
+        <RichTextContent html={project.description} className="mt-2 line-clamp-2 text-sm text-gray-500" />
+      ) : (
+        <p className="mt-2 text-sm text-gray-500">No description</p>
+      )}
     </div>
   );
 }

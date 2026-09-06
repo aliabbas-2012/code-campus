@@ -33,7 +33,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams): Promise<
     if (input.action === 'submit') {
       await requireRole(auth, 'STUDENT');
       await verifyProjectAccess(auth, id, 'write');
-      await submissionService.submit(id, auth.user.id);
+      await submissionService.submit(id, auth.user.id, input.remarks);
+    } else if (input.action === 'cancel') {
+      await requireRole(auth, 'STUDENT');
+      await verifyProjectAccess(auth, id, 'write');
+      await submissionService.cancel(id, auth.user.id);
     } else {
       await requireRole(auth, 'INSTRUCTOR');
       await verifyProjectAccess(auth, id, 'read');

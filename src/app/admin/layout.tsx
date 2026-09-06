@@ -4,17 +4,21 @@ import { useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { NotificationBell } from '@/components/shared/notification-bell';
+import { usePresenceHeartbeat } from '@/hooks/use-presence';
 
 const NAV = [
   { href: '/admin/dashboard', label: 'Dashboard' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/rosters', label: 'Rosters' },
+  { href: '/admin/settings', label: 'Settings' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }): React.ReactNode {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  usePresenceHeartbeat();
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -54,13 +58,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               ))}
             </nav>
           </div>
-          <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="text-sm font-medium text-gray-500 hover:text-gray-700"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-3">
+            <NotificationBell />
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="text-sm font-medium text-gray-500 hover:text-gray-700"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>

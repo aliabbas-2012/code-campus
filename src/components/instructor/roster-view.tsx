@@ -1,9 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useInstructorRoster } from '@/hooks/use-instructor-roster';
 
 export function RosterView(): React.ReactNode {
   const { data: roster, isLoading, isError } = useInstructorRoster();
+  const router = useRouter();
 
   return (
     <div>
@@ -25,7 +27,11 @@ export function RosterView(): React.ReactNode {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {roster?.map((link) => (
-                <tr key={link.id}>
+                <tr
+                  key={link.id}
+                  onClick={() => router.push(`/instructor/students/${link.student.id}`)}
+                  className="cursor-pointer hover:bg-gray-50"
+                >
                   <td className="px-4 py-2 font-medium text-gray-900">{link.student.name}</td>
                   <td className="px-4 py-2 text-gray-600">{link.student.email}</td>
                 </tr>

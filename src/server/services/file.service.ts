@@ -9,7 +9,7 @@ import {
   QuotaExceededError,
   ConflictError,
 } from '@/server/errors';
-import { CONFIG, validateFilename, validateFileSize } from '@/lib/config';
+import { CONFIG, validateFilename, validateFileSize, validateFileExtension } from '@/lib/config';
 import { CreateFileInput, UpdateFileInput, CreateFolderInput } from '@/server/validation/schemas';
 
 export class FileService {
@@ -27,6 +27,12 @@ export class FileService {
     // Validate filename
     if (!validateFilename(input.name)) {
       throw new SecurityError('Invalid filename');
+    }
+
+    if (!validateFileExtension(input.name)) {
+      throw new ValidationError(
+        `Only these file types are allowed: ${CONFIG.SUPPORTED_FILE_EXTENSIONS.join(', ')}`,
+      );
     }
 
     // Get parent folder (if specified)
@@ -239,7 +245,7 @@ export class FileService {
       throw new NotFoundError('File not found');
     }
 
-    if (file.type !== 'FILE') {
+    if (input.content !== undefined && file.type !== 'FILE') {
       throw new ValidationError('Cannot update a folder');
     }
 
@@ -302,6 +308,12 @@ export class FileService {
     if (input.name !== undefined && input.name !== file.name) {
       if (!validateFilename(input.name)) {
         throw new SecurityError('Invalid filename');
+      }
+
+      if (file.type === 'FILE' && !validateFileExtension(input.name)) {
+        throw new ValidationError(
+          `Only these file types are allowed: ${CONFIG.SUPPORTED_FILE_EXTENSIONS.join(', ')}`,
+        );
       }
 
       // Check for name conflict

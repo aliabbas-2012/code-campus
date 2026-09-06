@@ -1,11 +1,13 @@
 'use client';
 
 import type { SubmissionEvent } from '@/types/api';
+import { RichTextContent } from '@/components/ui/rich-text-content';
 
 const LABELS: Record<SubmissionEvent['type'], string> = {
   SUBMITTED: 'Submitted for review',
   REVISION_REQUESTED: 'Revision requested',
   GRADED: 'Graded',
+  CANCELLED: 'Review request cancelled',
 };
 
 function formatDate(iso: string): string {
@@ -31,7 +33,7 @@ export function SubmissionTimeline({ events }: { events: SubmissionEvent[] }): R
             <span className="text-xs font-normal text-gray-400">{formatDate(event.created_at)}</span>
           </div>
           <p className="text-xs text-gray-500">by {event.actor.name}</p>
-          {event.feedback && <p className="mt-1 text-sm text-gray-700">{event.feedback}</p>}
+          {event.feedback && <RichTextContent html={event.feedback} className="mt-1 text-sm text-gray-700" />}
           {event.score !== null && <p className="mt-1 text-sm text-gray-700">Score: {event.score}</p>}
         </li>
       ))}

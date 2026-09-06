@@ -6,6 +6,8 @@ import { useInstructorAssignment, useAddAssignmentStudents } from '@/hooks/use-i
 import { useInstructorRoster } from '@/hooks/use-instructor-roster';
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { RichTextContent } from '@/components/ui/rich-text-content';
 
 const STATUS_LABELS: Record<string, string> = {
   IN_PROGRESS: 'Not started / in progress',
@@ -21,31 +23,24 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
   const { showToast } = useToast();
   const router = useRouter();
   const [showAdd, setShowAdd] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<string[]>([]);
 
-  const availableToAdd = useMemo(() => {
+  const availableOptions = useMemo(() => {
     const already = new Set(assignment?.students.map((s) => s.student.id) ?? []);
-    return (roster ?? []).filter((link) => !already.has(link.student.id));
+    return (roster ?? [])
+      .filter((link) => !already.has(link.student.id))
+      .map((link) => ({ id: link.student.id, label: link.student.name, sublabel: link.student.email }));
   }, [roster, assignment]);
 
   if (isLoading) return <p className="text-sm text-gray-400">Loading…</p>;
   if (isError || !assignment) return <p className="text-sm text-red-600">Failed to load assignment.</p>;
 
-  const toggle = (id: string): void => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   const handleAdd = (): void => {
     addStudents.mutate(
-      { student_ids: Array.from(selected) },
+      { student_ids: selected },
       {
         onSuccess: () => {
-          setSelected(new Set());
+          setSelected([]);
           setShowAdd(false);
         },
         onError: (err) => showToast(err instanceof ApiError ? err.message : 'Failed to add students'),
@@ -56,7 +51,7 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900">{assignment.title}</h1>
-      {assignment.description && <p className="mt-2 max-w-2xl text-gray-600">{assignment.description}</p>}
+      {assignment.description && <RichTextContent html={assignment.description} className="mt-2 max-w-2xl text-gray-600" />}
       <p className="mt-2 text-sm text-gray-500">
         Pass at {assignment.pass_threshold}/{assignment.max_score}
       </p>
@@ -74,27 +69,16 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
 
       {showAdd && (
         <div className="mt-3 rounded-lg border border-gray-200 bg-white p-4">
-          <ul className="max-h-40 space-y-1 overflow-y-auto">
-            {availableToAdd.map((link) => (
-              <li key={link.id}>
-                <label className="flex items-center gap-2 rounded px-1 py-1 text-sm hover:bg-gray-50">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(link.student.id)}
-                    onChange={() => toggle(link.student.id)}
-                  />
-                  {link.student.name}
-                </label>
-              </li>
-            ))}
-            {availableToAdd.length === 0 && (
-              <p className="px-1 py-2 text-sm text-gray-400">Everyone on your roster is already assigned.</p>
-            )}
-          </ul>
+          <MultiSelect
+            options={availableOptions}
+            selected={selected}
+            onChange={setSelected}
+            placeholder={availableOptions.length === 0 ? 'Everyone on your roster is already assigned' : 'Search students…'}
+          />
           <button
             type="button"
             onClick={handleAdd}
-            disabled={selected.size === 0 || addStudents.isPending}
+            disabled={selected.length === 0 || addStudents.isPending}
             className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             Add Selected

@@ -25,6 +25,7 @@ export class AssignmentService {
         description: input.description,
         max_score: input.max_score,
         pass_threshold: input.pass_threshold,
+        starter_code: input.starter_code,
         assigned_students: {
           createMany: {
             data: input.student_ids.map((student_id) => ({ student_id })),
@@ -89,6 +90,7 @@ export class AssignmentService {
       description: assignment.description,
       max_score: assignment.max_score,
       pass_threshold: assignment.pass_threshold,
+      starter_code: assignment.starter_code,
       created_at: assignment.created_at,
       students: assignment.assigned_students.map((row) => ({
         student: row.student,
@@ -165,6 +167,115 @@ export class AssignmentService {
     });
   }
 
+  async getReportForInstructor(instructorId: string): Promise<
+    Array<{
+      assignment_id: string;
+      assignment_title: string;
+      max_score: number;
+      pass_threshold: number;
+      student_id: string;
+      student_name: string;
+      status: string;
+      score: number | null;
+      passed: boolean | null;
+    }>
+  > {
+    const assignments = await db.assignment.findMany({
+      where: { instructor_id: instructorId },
+      include: {
+        assigned_students: { include: { student: { select: { id: true, name: true } } } },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    const submissions = await db.submission.findMany({
+      where: { assignment_id: { in: assignments.map((a) => a.id) } },
+      select: { assignment_id: true, student_id: true, status: true, score: true, passed: true },
+    });
+    const subByKey = new Map(submissions.map((s) => [`${s.assignment_id}:${s.student_id}`, s]));
+
+    const rows: Array<{
+      assignment_id: string;
+      assignment_title: string;
+      max_score: number;
+      pass_threshold: number;
+      student_id: string;
+      student_name: string;
+      status: string;
+      score: number | null;
+      passed: boolean | null;
+    }> = [];
+
+    for (const a of assignments) {
+      for (const link of a.assigned_students) {
+        const sub = subByKey.get(`${a.id}:${link.student.id}`);
+        rows.push({
+          assignment_id: a.id,
+          assignment_title: a.title,
+          max_score: a.max_score,
+          pass_threshold: a.pass_threshold,
+          student_id: link.student.id,
+          student_name: link.student.name,
+          status: sub?.status ?? 'IN_PROGRESS',
+          score: sub?.score ?? null,
+          passed: sub?.passed ?? null,
+        });
+      }
+    }
+
+    return rows;
+  }
+
+  async listForInstructorAndStudent(instructorId: string, studentId: string): Promise<
+    Array<{
+      id: string;
+      title: string;
+      max_score: number;
+      pass_threshold: number;
+      submission: { status: string; score: number | null; passed: boolean | null; project_id: string } | null;
+    }>
+  > {
+    const roster = await db.instructorStudents.findUnique({
+      where: { instructor_id_student_id: { instructor_id: instructorId, student_id: studentId } },
+    });
+    if (!roster) {
+      throw new NotFoundError('This student is not on your roster');
+    }
+
+    const links = await db.assignmentStudent.findMany({
+      where: { student_id: studentId, assignment: { instructor_id: instructorId } },
+      include: {
+        assignment: {
+          include: {
+            projects: {
+              where: { workspace: { user_id: studentId } },
+              include: { submission: true },
+            },
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    return links.map(({ assignment }) => {
+      const project = assignment.projects[0];
+      return {
+        id: assignment.id,
+        title: assignment.title,
+        max_score: assignment.max_score,
+        pass_threshold: assignment.pass_threshold,
+        submission: project?.submission
+          ? {
+              status: project.submission.status,
+              score: project.submission.score,
+              passed: project.submission.passed,
+              project_id: project.id,
+            }
+          : null,
+      };
+    });
+  }
+
   async getAssignmentForStudent(assignmentId: string, studentId: string) {
     const link = await db.assignmentStudent.findUnique({
       where: { assignment_id_student_id: { assignment_id: assignmentId, student_id: studentId } },
@@ -174,7 +285,11 @@ export class AssignmentService {
             instructor: { select: { name: true } },
             projects: {
               where: { workspace: { user_id: studentId } },
-              include: { submission: { include: { events: { orderBy: { created_at: 'asc' } } } } },
+              include: {
+                submission: {
+                  include: { events: { orderBy: { created_at: 'asc' }, include: { actor: { select: { name: true } } } } },
+                },
+              },
             },
           },
         },

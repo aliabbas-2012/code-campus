@@ -7,6 +7,18 @@ export interface RunResult {
   executionTime: number;
 }
 
+export interface PackageInstallResult {
+  package: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface ReplResult {
+  stdout: string;
+  stderr: string;
+  returnCode: number;
+}
+
 type WorkerStatus = 'initializing' | 'ready' | 'error';
 
 const DEFAULT_TIMEOUT_MS = 10_000;
@@ -17,12 +29,20 @@ export function usePythonWorker(): {
   isRunning: boolean;
   output: RunResult | null;
   run: (code: string) => void;
+  installPackages: (packages: string[]) => Promise<PackageInstallResult[]>;
+  isInstalling: boolean;
+  runRepl: (code: string) => Promise<ReplResult>;
+  mountFiles: (files: Array<{ path: string; content: string }>) => Promise<void>;
 } {
   const workerRef = useRef<Worker | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const installResolverRef = useRef<((results: PackageInstallResult[]) => void) | null>(null);
+  const replResolverRef = useRef<((result: ReplResult) => void) | null>(null);
+  const mountResolverRef = useRef<(() => void) | null>(null);
   const [status, setStatus] = useState<WorkerStatus>('initializing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
   const [output, setOutput] = useState<RunResult | null>(null);
 
   const spawnWorker = useCallback(() => {
@@ -40,6 +60,16 @@ export function usePythonWorker(): {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setOutput(data as RunResult);
         setIsRunning(false);
+      } else if (type === 'packages_installed') {
+        setIsInstalling(false);
+        installResolverRef.current?.(data.results as PackageInstallResult[]);
+        installResolverRef.current = null;
+      } else if (type === 'repl_result') {
+        replResolverRef.current?.(data as ReplResult);
+        replResolverRef.current = null;
+      } else if (type === 'files_mounted') {
+        mountResolverRef.current?.();
+        mountResolverRef.current = null;
       }
     };
 
@@ -85,5 +115,48 @@ export function usePythonWorker(): {
     [status, isRunning, spawnWorker],
   );
 
-  return { status, errorMessage, isRunning, output, run };
+  const installPackages = useCallback(
+    (packages: string[]): Promise<PackageInstallResult[]> => {
+      return new Promise((resolve) => {
+        if (status !== 'ready' || !workerRef.current) {
+          resolve(packages.map((p) => ({ package: p, success: false, error: 'Python runtime not ready' })));
+          return;
+        }
+        setIsInstalling(true);
+        installResolverRef.current = resolve;
+        workerRef.current.postMessage({ type: 'install_packages', data: { packages } });
+      });
+    },
+    [status],
+  );
+
+  const runRepl = useCallback(
+    (code: string): Promise<ReplResult> => {
+      return new Promise((resolve) => {
+        if (status !== 'ready' || !workerRef.current) {
+          resolve({ stdout: '', stderr: 'Python runtime not ready', returnCode: 1 });
+          return;
+        }
+        replResolverRef.current = resolve;
+        workerRef.current.postMessage({ type: 'repl', data: { code } });
+      });
+    },
+    [status],
+  );
+
+  const mountFiles = useCallback(
+    (files: Array<{ path: string; content: string }>): Promise<void> => {
+      return new Promise((resolve) => {
+        if (status !== 'ready' || !workerRef.current) {
+          resolve();
+          return;
+        }
+        mountResolverRef.current = resolve;
+        workerRef.current.postMessage({ type: 'mount_files', data: { files } });
+      });
+    },
+    [status],
+  );
+
+  return { status, errorMessage, isRunning, output, run, installPackages, isInstalling, runRepl, mountFiles };
 }

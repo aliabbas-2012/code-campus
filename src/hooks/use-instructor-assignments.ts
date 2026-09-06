@@ -12,7 +12,15 @@ import type {
   AssignmentSummary,
   AddAssignmentStudentsInput,
   CreateAssignmentInput,
+  InstructorReportRow,
 } from '@/types/api';
+
+export function useInstructorReport(): UseQueryResult<InstructorReportRow[]> {
+  return useQuery({
+    queryKey: queryKeys.instructorReport,
+    queryFn: api.instructor.report,
+  });
+}
 
 export function useInstructorAssignments(): UseQueryResult<AssignmentSummary[]> {
   return useQuery({

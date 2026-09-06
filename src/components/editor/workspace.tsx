@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,12 +10,16 @@ import { useToast } from '@/components/ui/toast';
 import { usePythonWorker } from '@/hooks/use-python-worker';
 import { useAutosave } from '@/hooks/use-autosave';
 import { useProject } from '@/hooks/use-projects';
+import { useProjectFiles } from '@/hooks/use-files';
+import { useSubmission } from '@/hooks/use-submission';
 import { FileTree } from './file-tree';
 import { EditorTabs } from './editor-tabs';
 import { CodeEditor } from './code-editor';
 import { OutputPanel } from './output-panel';
 import { RunButton } from './run-button';
 import { SubmissionBar } from './submission-bar';
+import { PackageManager } from './package-manager';
+import { PythonShell } from './python-shell';
 import { StorageQuotaBar } from '@/components/dashboard/storage-quota-bar';
 import type { OpenTab } from './types';
 import type { FileNode } from '@/types/api';
@@ -32,12 +36,35 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
   const { status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
-  const { status: workerStatus, errorMessage: workerErrorMessage, isRunning, output, run } = usePythonWorker();
+  const {
+    status: workerStatus,
+    errorMessage: workerErrorMessage,
+    isRunning,
+    output,
+    run,
+    installPackages,
+    isInstalling,
+    runRepl,
+    mountFiles,
+  } = usePythonWorker();
   const { data: project } = useProject(projectId);
+  const { data: projectFiles } = useProjectFiles(projectId);
+  const { data: submission } = useSubmission(mode === 'edit' && project?.assignment_id ? projectId : null);
 
   const [tabs, setTabs] = useState<OpenTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [openingFileId, setOpeningFileId] = useState<string | null>(null);
+  const [showPackages, setShowPackages] = useState(false);
+  const [bottomTab, setBottomTab] = useState<'output' | 'shell'>('output');
+  const [shellMounted, setShellMounted] = useState(false);
+  const shellMountingRef = useRef(false);
+  const autoInstalledRef = useRef(false);
+  const autoOpenedRef = useRef(false);
+
+  // Once submitted, a student's own files lock until the instructor grades/requests
+  // revision, or the student cancels the review request — matches a real review workflow.
+  const isLockedForStudent = mode === 'edit' && (submission?.status === 'SUBMITTED' || submission?.status === 'GRADED');
+  const effectiveMode: 'edit' | 'review' = mode === 'review' ? 'review' : isLockedForStudent ? 'review' : 'edit';
 
   const activeTab = useMemo(() => tabs.find((t) => t.fileId === activeTabId), [tabs, activeTabId]);
 
@@ -45,7 +72,7 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
     setTabs((prev) => prev.map((t) => (t.fileId === fileId ? { ...t, ...patch } : t)));
   }, []);
 
-  const { flush } = useAutosave(activeTab, updateTab, mode === 'edit');
+  const { flush } = useAutosave(activeTab, updateTab, effectiveMode === 'edit');
 
   const handleOpenFile = useCallback(
     async (file: FileNode): Promise<void> => {
@@ -121,6 +148,50 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
     }
   }, [activeTab, updateTab, showToast]);
 
+  const mountProjectFiles = useCallback(async (): Promise<void> => {
+    if (shellMounted || shellMountingRef.current || workerStatus !== 'ready' || !projectFiles) return;
+    shellMountingRef.current = true;
+    try {
+      const byId = new Map(projectFiles.map((f) => [f.id, f]));
+      const buildPath = (file: FileNode): string => {
+        const parent = file.parent_id ? byId.get(file.parent_id) : undefined;
+        return parent ? `${buildPath(parent)}/${file.name}` : file.name;
+      };
+      const files = projectFiles.filter((f) => f.type === 'FILE');
+      const contents = await Promise.all(
+        files.map(async (f) => ({ path: buildPath(f), content: (await api.files.get(f.id)).content ?? '' })),
+      );
+      await mountFiles(contents);
+      setShellMounted(true);
+    } finally {
+      shellMountingRef.current = false;
+    }
+  }, [shellMounted, workerStatus, projectFiles, mountFiles]);
+
+  const handleOpenShell = useCallback((): void => {
+    setBottomTab('shell');
+    void mountProjectFiles();
+  }, [mountProjectFiles]);
+
+  // If the shell tab is open but the worker wasn't ready yet when it was first
+  // requested, mount as soon as it becomes ready instead of staying stuck.
+  useEffect(() => {
+    if (bottomTab === 'shell') {
+      void mountProjectFiles();
+    }
+  }, [bottomTab, workerStatus, mountProjectFiles]);
+
+  // Auto-open the first file in the project once, so the editor isn't blank on load.
+  useEffect(() => {
+    if (autoOpenedRef.current || !projectFiles) return;
+
+    const firstFile = projectFiles.find((f) => f.parent_id === null && f.type === 'FILE');
+    if (!firstFile) return;
+
+    autoOpenedRef.current = true;
+    queueMicrotask(() => handleOpenFile(firstFile));
+  }, [projectFiles, handleOpenFile]);
+
   // Warn on unload if anything is unsaved — a real save can't be forced reliably during unload.
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent): void => {
@@ -139,6 +210,30 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
       router.push('/login');
     }
   }, [sessionStatus, router]);
+
+  // Auto-install requirements.txt once, the first time the worker is ready.
+  useEffect(() => {
+    if (mode !== 'edit' || autoInstalledRef.current) return;
+    if (workerStatus !== 'ready' || !projectFiles) return;
+
+    const reqFile = projectFiles.find((f) => f.parent_id === null && f.name === 'requirements.txt');
+    if (!reqFile) return;
+
+    autoInstalledRef.current = true;
+    api.files
+      .get(reqFile.id)
+      .then((file) => {
+        const packages = (file.content ?? '')
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith('#'));
+        if (packages.length > 0) {
+          showToast(`Installing ${packages.length} package(s) from requirements.txt…`, 'info');
+          installPackages(packages);
+        }
+      })
+      .catch(() => {});
+  }, [mode, workerStatus, projectFiles, installPackages, showToast]);
 
   if (sessionStatus === 'loading') {
     return (
@@ -170,11 +265,34 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
             <StorageQuotaBar />
           </div>
         )}
-        <RunButton
-          disabled={workerStatus !== 'ready' || isRunning || !activeTab}
-          isRunning={isRunning}
-          onRun={() => activeTab && run(activeTab.content)}
-        />
+        <div className="flex items-center gap-2">
+          {mode === 'edit' && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowPackages((v) => !v)}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Packages
+              </button>
+              {showPackages && (
+                <div className="absolute right-0 top-full z-20 mt-1">
+                  <PackageManager
+                    projectId={projectId}
+                    installPackages={installPackages}
+                    isInstalling={isInstalling}
+                    workerReady={workerStatus === 'ready'}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          <RunButton
+            disabled={workerStatus !== 'ready' || isRunning || !activeTab}
+            isRunning={isRunning}
+            onRun={() => activeTab && run(activeTab.content)}
+          />
+        </div>
       </div>
 
       {mode === 'edit' && project?.assignment_id && <SubmissionBar projectId={projectId} />}
@@ -182,7 +300,7 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-64 shrink-0 border-r border-gray-200 overflow-y-auto">
-          <FileTree projectId={projectId} onOpenFile={handleOpenFile} mode={mode} />
+          <FileTree projectId={projectId} onOpenFile={handleOpenFile} mode={effectiveMode} />
         </aside>
 
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -196,7 +314,7 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
           <div className="flex flex-1 flex-col overflow-hidden">
             {activeTab ? (
               <>
-                {mode === 'edit' && activeTab.saveStatus === 'conflict' && (
+                {effectiveMode === 'edit' && activeTab.saveStatus === 'conflict' && (
                   <div className="flex items-center justify-between bg-amber-50 px-4 py-2 text-sm text-amber-800">
                     <span>This file changed elsewhere since you opened it. Your local changes have not been saved.</span>
                     <button
@@ -212,8 +330,10 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
                   <CodeEditor
                     filename={activeTab.name}
                     value={activeTab.content}
-                    onChange={mode === 'edit' ? (content) => updateTab(activeTab.fileId, { content }) : undefined}
-                    readOnly={mode === 'review'}
+                    onChange={effectiveMode === 'edit' ? (content) => updateTab(activeTab.fileId, { content }) : undefined}
+                    readOnly={effectiveMode === 'review'}
+                    fileId={activeTab.fileId}
+                    canComment={mode === 'review'}
                   />
                 </div>
               </>
@@ -224,13 +344,35 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
             )}
           </div>
 
-          <div className="h-48 shrink-0 border-t border-gray-200">
-            <OutputPanel
-              output={output}
-              isRunning={isRunning}
-              workerStatus={workerStatus}
-              workerErrorMessage={workerErrorMessage}
-            />
+          <div className="flex h-56 shrink-0 flex-col border-t border-gray-200">
+            <div className="flex shrink-0 gap-1 border-b border-gray-200 bg-gray-50 px-2 py-1">
+              <button
+                type="button"
+                onClick={() => setBottomTab('output')}
+                className={`rounded px-2 py-1 text-xs font-medium ${bottomTab === 'output' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Output
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenShell}
+                className={`rounded px-2 py-1 text-xs font-medium ${bottomTab === 'shell' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Shell
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              {bottomTab === 'output' ? (
+                <OutputPanel
+                  output={output}
+                  isRunning={isRunning}
+                  workerStatus={workerStatus}
+                  workerErrorMessage={workerErrorMessage}
+                />
+              ) : (
+                <PythonShell runRepl={runRepl} workerReady={workerStatus === 'ready'} mounted={shellMounted} />
+              )}
+            </div>
           </div>
         </div>
       </div>

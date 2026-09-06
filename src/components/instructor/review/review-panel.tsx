@@ -6,6 +6,7 @@ import { useSubmission, useSubmissionAction } from '@/hooks/use-submission';
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api';
 import { SubmissionTimeline } from '@/components/shared/submission-timeline';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 const STATUS_STYLES: Record<string, string> = {
   IN_PROGRESS: 'bg-gray-100 text-gray-700',
@@ -20,6 +21,10 @@ const STATUS_LABELS: Record<string, string> = {
   REVISION_REQUESTED: 'Revision requested',
   GRADED: 'Graded',
 };
+
+function isHtmlEmpty(html: string): boolean {
+  return html.replace(/<[^>]*>/g, '').trim().length === 0;
+}
 
 export function ReviewPanel({ projectId }: { projectId: string }): React.ReactNode {
   const { data: submission } = useSubmission(projectId);
@@ -38,9 +43,9 @@ export function ReviewPanel({ projectId }: { projectId: string }): React.ReactNo
   const wouldPass = score !== '' && !Number.isNaN(scoreNumber) && scoreNumber >= submission.assignment.pass_threshold;
 
   const handleRequestRevision = (): void => {
-    if (!feedback.trim()) return;
+    if (isHtmlEmpty(feedback)) return;
     action.mutate(
-      { action: 'request_revision', feedback: feedback.trim() },
+      { action: 'request_revision', feedback },
       {
         onSuccess: () => setFeedback(''),
         onError: (err) => showToast(err instanceof ApiError ? err.message : 'Failed to send revision request'),
@@ -101,21 +106,16 @@ export function ReviewPanel({ projectId }: { projectId: string }): React.ReactNo
       {canAct && (
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-gray-200 bg-white p-3">
-            <label htmlFor="feedback" className="block text-xs font-semibold uppercase text-gray-500">
+            <label className="block text-xs font-semibold uppercase text-gray-500">
               Request revision
             </label>
-            <textarea
-              id="feedback"
-              rows={2}
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="What should the student change?"
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-amber-500"
-            />
+            <div className="mt-1">
+              <RichTextEditor value={feedback} onChange={setFeedback} placeholder="What should the student change?" />
+            </div>
             <button
               type="button"
               onClick={handleRequestRevision}
-              disabled={!feedback.trim() || action.isPending}
+              disabled={isHtmlEmpty(feedback) || action.isPending}
               className="mt-2 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-50"
             >
               Send Revision Request

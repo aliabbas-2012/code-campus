@@ -12,4 +12,10 @@ export const queryKeys = {
   studentAssignments: ['student', 'assignments'] as const,
   studentAssignment: (id: string) => ['student', 'assignments', id] as const,
   submission: (projectId: string) => ['projects', projectId, 'submission'] as const,
+  lineComments: (fileId: string) => ['files', fileId, 'comments'] as const,
+  notifications: ['notifications'] as const,
+  instructorGuidelines: ['instructor', 'guidelines'] as const,
+  studentGuidelines: ['student', 'guidelines'] as const,
+  adminSmtpSettings: ['admin', 'smtp-settings'] as const,
+  instructorReport: ['instructor', 'report'] as const,
 };

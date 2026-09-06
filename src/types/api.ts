@@ -137,6 +137,7 @@ export interface AssignmentDetail {
   description: string | null;
   max_score: number;
   pass_threshold: number;
+  starter_code: string | null;
   created_at: string;
   students: AssignmentStudentStatus[];
 }
@@ -147,6 +148,7 @@ export interface CreateAssignmentInput {
   max_score?: number;
   pass_threshold?: number;
   student_ids: string[];
+  starter_code?: string;
 }
 
 export interface AddAssignmentStudentsInput {
@@ -164,7 +166,7 @@ export interface StudentAssignmentSummary {
 
 export interface SubmissionEvent {
   id: string;
-  type: 'SUBMITTED' | 'REVISION_REQUESTED' | 'GRADED';
+  type: 'SUBMITTED' | 'REVISION_REQUESTED' | 'GRADED' | 'CANCELLED';
   feedback: string | null;
   score: number | null;
   created_at: string;
@@ -194,10 +196,74 @@ export interface StudentAssignmentDetail {
 }
 
 export type SubmissionActionInput =
-  | { action: 'submit' }
+  | { action: 'submit'; remarks?: string }
+  | { action: 'cancel' }
   | { action: 'request_revision'; feedback: string }
   | { action: 'grade'; score: number };
 
 export interface StartAssignmentResult {
   project_id: string;
+}
+
+export interface LineComment {
+  id: string;
+  line_number: number;
+  comment: string;
+  created_at: string;
+  author: { name: string };
+}
+
+export interface CreateLineCommentInput {
+  line_number: number;
+  comment: string;
+}
+
+export interface Notification {
+  id: string;
+  type: 'SUBMISSION_RECEIVED' | 'REVISION_REQUESTED' | 'GRADED' | 'SUBMISSION_CANCELLED';
+  title: string;
+  message: string;
+  link: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unreadCount: number;
+}
+
+export interface Guidelines {
+  content: string;
+}
+
+export interface InstructorReportRow {
+  assignment_id: string;
+  assignment_title: string;
+  max_score: number;
+  pass_threshold: number;
+  student_id: string;
+  student_name: string;
+  status: string;
+  score: number | null;
+  passed: boolean | null;
+}
+
+export interface InstructorStudentAssignment {
+  id: string;
+  title: string;
+  max_score: number;
+  pass_threshold: number;
+  submission: { status: string; score: number | null; passed: boolean | null; project_id: string } | null;
+}
+
+export interface SmtpSettings {
+  host: string;
+  port: number;
+  secure: boolean;
+  username?: string;
+  password?: string;
+  from_email: string;
+  from_name: string;
+  enabled: boolean;
 }

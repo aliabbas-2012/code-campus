@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { CONFIG, validateFileExtension } from '@/lib/config';
 import { VALID_FILENAME_PATTERN } from './file-tree-context';
 
 interface InlineNameInputProps {
   defaultValue?: string;
+  type: 'file' | 'folder';
   onSubmit: (name: string) => void;
   onCancel: () => void;
 }
 
-export function InlineNameInput({ defaultValue = '', onSubmit, onCancel }: InlineNameInputProps): React.ReactNode {
+export function InlineNameInput({ defaultValue = '', type, onSubmit, onCancel }: InlineNameInputProps): React.ReactNode {
   const [value, setValue] = useState(defaultValue);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +32,10 @@ export function InlineNameInput({ defaultValue = '', onSubmit, onCancel }: Inlin
     }
     if (!VALID_FILENAME_PATTERN.test(trimmed)) {
       setError('Only letters, numbers, dots, dashes and underscores are allowed');
+      return;
+    }
+    if (type === 'file' && !validateFileExtension(trimmed)) {
+      setError(`File type not allowed. Use: ${CONFIG.SUPPORTED_FILE_EXTENSIONS.join(', ')}`);
       return;
     }
     settledRef.current = true;
