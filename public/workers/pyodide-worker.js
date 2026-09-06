@@ -38,12 +38,29 @@ async function getMicropip() {
   return micropip;
 }
 
+async function resolvePackageBaseUrl() {
+  // Individual package wheels (numpy, pandas, ...) aren't vendored under /pyodide — only the
+  // core runtime is self-hosted (see copy-pyodide-assets.js). Packages instead load from
+  // Pyodide's own release CDN, at the exact version actually installed, read from a plain
+  // text file written by that same script so this can never drift to a mismatched release.
+  try {
+    const res = await fetch(`${PYODIDE_BASE_URL}version.txt`);
+    if (!res.ok) return undefined;
+    const version = (await res.text()).trim();
+    return version ? `https://cdn.jsdelivr.net/pyodide/v${version}/full/` : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 async function initPyodide() {
   try {
     const { loadPyodide } = await import(`${PYODIDE_BASE_URL}pyodide.mjs`);
+    const packageBaseUrl = await resolvePackageBaseUrl();
 
     pyodide = await loadPyodide({
       indexURL: PYODIDE_BASE_URL,
+      packageBaseUrl,
       stdout: (msg) => stdoutChunks.push(msg),
       stderr: (msg) => stderrChunks.push(msg),
     });
@@ -139,6 +156,70 @@ self.onmessage = async (event) => {
       pyodide.FS.writeFile(file.path, file.content);
     }
     self.postMessage({ type: 'files_mounted' });
+  } else if (event.data.type === 'list_stdlib_modules') {
+    if (!pyodideReady || !pyodide) {
+      self.postMessage({ type: 'stdlib_modules', data: { requestId: event.data.data?.requestId, modules: [] } });
+      return;
+    }
+    try {
+      const names = pyodide.runPython(
+        'import sys, json; json.dumps(sorted(n for n in sys.stdlib_module_names if not n.startswith("_")))',
+      );
+      self.postMessage({
+        type: 'stdlib_modules',
+        data: { requestId: event.data.data?.requestId, modules: JSON.parse(names) },
+      });
+    } catch (error) {
+      self.postMessage({ type: 'stdlib_modules', data: { requestId: event.data.data?.requestId, modules: [] } });
+    }
+  } else if (event.data.type === 'introspect_module') {
+    const requestId = event.data.data?.requestId;
+    const moduleName = event.data.data?.module ?? '';
+
+    if (!pyodideReady || !pyodide || !/^[A-Za-z_][A-Za-z0-9_.]*$/.test(moduleName)) {
+      self.postMessage({ type: 'introspect_result', data: { requestId, module: moduleName, members: [] } });
+      return;
+    }
+
+    try {
+      // Import in an isolated dict so this never touches the user's own globals/variables.
+      const script = `
+import importlib, inspect, json as _json
+
+def _introspect(mod_name):
+    try:
+        mod = importlib.import_module(mod_name)
+    except Exception:
+        return []
+    results = []
+    for name in dir(mod):
+        if name.startswith('_'):
+            continue
+        try:
+            attr = getattr(mod, name)
+        except Exception:
+            continue
+        if inspect.isclass(attr):
+            kind = 'class'
+        elif inspect.isroutine(attr):
+            kind = 'function'
+        elif inspect.ismodule(attr):
+            kind = 'module'
+        else:
+            kind = 'value'
+        doc = inspect.getdoc(attr)
+        summary = doc.strip().splitlines()[0][:160] if doc else ''
+        results.append({'name': name, 'kind': kind, 'doc': summary})
+    return results
+
+_json.dumps(_introspect(${JSON.stringify(moduleName)}))
+`;
+      await pyodide.loadPackagesFromImports(`import ${moduleName.split('.')[0]}`);
+      const json = await pyodide.runPythonAsync(script);
+      self.postMessage({ type: 'introspect_result', data: { requestId, module: moduleName, members: JSON.parse(json) } });
+    } catch (error) {
+      self.postMessage({ type: 'introspect_result', data: { requestId, module: moduleName, members: [] } });
+    }
   } else if (event.data.type === 'repl') {
     if (!pyodideReady || !pyodide) {
       self.postMessage({ type: 'error', data: { message: 'Pyodide not ready' } });

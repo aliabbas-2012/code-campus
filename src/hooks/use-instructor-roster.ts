@@ -10,9 +10,13 @@ export function useInstructorRoster(): UseQueryResult<RosterLink[]> {
   });
 }
 
-export function useInstructorStudentAssignments(studentId: string): UseQueryResult<InstructorStudentAssignment[]> {
+export function useInstructorStudentAssignments(
+  studentId: string,
+  enabled = true,
+): UseQueryResult<InstructorStudentAssignment[]> {
   return useQuery({
     queryKey: ['instructor', 'students', studentId, 'assignments'],
     queryFn: () => api.instructor.roster.studentAssignments(studentId),
+    enabled: enabled && !!studentId,
   });
 }

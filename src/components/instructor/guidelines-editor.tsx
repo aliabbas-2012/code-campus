@@ -29,7 +29,7 @@ export function GuidelinesEditor(): React.ReactNode {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Guidelines</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900">Guidelines</h1>
       <p className="mt-1 text-sm text-gray-500">
         Shown to every student on your roster. Use it for grading criteria, submission expectations, or house rules.
       </p>
@@ -40,7 +40,7 @@ export function GuidelinesEditor(): React.ReactNode {
         type="button"
         onClick={handleSave}
         disabled={update.isPending}
-        className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+        className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
       >
         {update.isPending ? 'Saving…' : 'Save Guidelines'}
       </button>

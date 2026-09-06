@@ -1,10 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useProjectFiles, useCreateFile, useFile } from '@/hooks/use-files';
-import { api, ApiError } from '@/lib/api';
-import { queryKeys } from '@/lib/query-keys';
+import { useProjectFiles, useFile } from '@/hooks/use-files';
+import { useRequirementsSync } from '@/hooks/use-requirements';
+import { ApiError } from '@/lib/api';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { useToast } from '@/components/ui/toast';
 import type { PackageInstallResult } from '@/hooks/use-python-worker';
@@ -32,8 +31,7 @@ export function PackageManager({ projectId, installPackages, isInstalling, worke
   const { data: files } = useProjectFiles(projectId);
   const reqFile = files?.find((f) => f.parent_id === null && f.name === 'requirements.txt');
   const { data: reqFileContent } = useFile(reqFile?.id ?? null);
-  const createFile = useCreateFile(projectId);
-  const queryClient = useQueryClient();
+  const { sync } = useRequirementsSync(projectId);
   const { showToast } = useToast();
 
   const [selected, setSelected] = useState<string[]>([]);
@@ -69,17 +67,8 @@ export function PackageManager({ projectId, installPackages, isInstalling, worke
   };
 
   const syncRequirementsTxt = async (installedNames: string[]): Promise<void> => {
-    if (installedNames.length === 0) return;
     try {
-      if (reqFile) {
-        const fresh = await api.files.get(reqFile.id);
-        const existingLines = (fresh.content ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
-        const merged = Array.from(new Set([...existingLines, ...installedNames]));
-        await api.files.update(reqFile.id, { content: merged.join('\n') + '\n', updated_at: fresh.updated_at });
-      } else {
-        await createFile.mutateAsync({ name: 'requirements.txt', content: installedNames.join('\n') + '\n' });
-      }
-      queryClient.invalidateQueries({ queryKey: queryKeys.files(projectId) });
+      await sync(installedNames);
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Installed, but failed to update requirements.txt');
     }

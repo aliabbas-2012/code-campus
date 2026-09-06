@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSmtpSettings, useUpdateSmtpSettings } from '@/hooks/use-smtp-settings';
+import { useSmtpSettings, useUpdateSmtpSettings, useTestSmtpSettings } from '@/hooks/use-smtp-settings';
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api';
 import type { SmtpSettings } from '@/types/api';
@@ -20,9 +20,11 @@ const DEFAULTS: SmtpSettings = {
 export function SmtpSettingsForm(): React.ReactNode {
   const { data, isLoading } = useSmtpSettings();
   const update = useUpdateSmtpSettings();
+  const test = useTestSmtpSettings();
   const { showToast } = useToast();
   const [form, setForm] = useState<SmtpSettings>(DEFAULTS);
   const [loaded, setLoaded] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!loaded && data !== undefined) {
     setLoaded(true);
@@ -39,16 +41,23 @@ export function SmtpSettingsForm(): React.ReactNode {
     });
   };
 
+  const handleTest = (): void => {
+    test.mutate(form, {
+      onSuccess: () => showToast('Test email sent — check your inbox', 'info'),
+      onError: (err) => showToast(err instanceof ApiError ? err.message : 'Failed to send test email'),
+    });
+  };
+
   if (isLoading) return <p className="text-sm text-gray-400">Loading…</p>;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">SMTP Settings</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900">SMTP Settings</h1>
       <p className="mt-1 text-sm text-gray-500">
         When a user is offline, notifications (submissions, revisions, grades) are emailed to them using these settings.
       </p>
 
-      <div className="mt-4 max-w-lg space-y-4 rounded-lg border border-gray-200 bg-white p-5">
+      <div className="mt-4 max-w-lg space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
           <input
             type="checkbox"
@@ -65,7 +74,7 @@ export function SmtpSettingsForm(): React.ReactNode {
             value={form.host}
             onChange={(e) => setForm((f) => ({ ...f, host: e.target.value }))}
             placeholder="smtp.example.com"
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
@@ -77,7 +86,7 @@ export function SmtpSettingsForm(): React.ReactNode {
               type="number"
               value={form.port}
               onChange={(e) => setForm((f) => ({ ...f, port: Number(e.target.value) }))}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <label className="mt-6 flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -96,19 +105,28 @@ export function SmtpSettingsForm(): React.ReactNode {
             id="smtp-username"
             value={form.username ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
         <div>
           <label htmlFor="smtp-password" className="block text-sm font-medium text-gray-700">Password</label>
-          <input
-            id="smtp-password"
-            type="password"
-            value={form.password ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-indigo-500"
-          />
+          <div className="mt-1 flex gap-2">
+            <input
+              id="smtp-password"
+              type={showPassword ? 'text' : 'password'}
+              value={form.password ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </div>
 
         <div>
@@ -119,7 +137,7 @@ export function SmtpSettingsForm(): React.ReactNode {
             value={form.from_email}
             onChange={(e) => setForm((f) => ({ ...f, from_email: e.target.value }))}
             placeholder="noreply@example.com"
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
@@ -129,18 +147,28 @@ export function SmtpSettingsForm(): React.ReactNode {
             id="smtp-from-name"
             value={form.from_name}
             onChange={(e) => setForm((f) => ({ ...f, from_name: e.target.value }))}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={update.isPending}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-        >
-          {update.isPending ? 'Saving…' : 'Save Settings'}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={update.isPending}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {update.isPending ? 'Saving…' : 'Save Settings'}
+          </button>
+          <button
+            type="button"
+            onClick={handleTest}
+            disabled={test.isPending || !form.host || !form.from_email}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50"
+          >
+            {test.isPending ? 'Sending…' : 'Send Test Email'}
+          </button>
+        </div>
       </div>
     </div>
   );

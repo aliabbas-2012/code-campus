@@ -16,3 +16,9 @@ export function useUpdateSmtpSettings(): UseMutationResult<SmtpSettings, Error, 
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.adminSmtpSettings }),
   });
 }
+
+export function useTestSmtpSettings(): UseMutationResult<{ success: true }, Error, SmtpSettings> {
+  return useMutation({
+    mutationFn: (input: SmtpSettings) => api.admin.smtpSettings.sendTest(input),
+  });
+}

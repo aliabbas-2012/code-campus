@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useInstructorRoster } from '@/hooks/use-instructor-roster';
-import { ApiError } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { MultiSelect } from '@/components/ui/multi-select';
+import { MultiSelect, type MultiSelectOption } from '@/components/ui/multi-select';
 
 export interface AssignmentFormValues {
   title: string;
@@ -32,6 +32,8 @@ interface AssignmentFormDialogProps {
   submitError: unknown;
   onSubmit: (values: AssignmentFormValues, studentIds: string[]) => void;
   onClose: () => void;
+  /** When set, this dialog is scoped to one student (e.g. opened from their detail page) — the picker is skipped. */
+  fixedStudent?: { id: string; name: string };
 }
 
 export function AssignmentFormDialog({
@@ -39,9 +41,10 @@ export function AssignmentFormDialog({
   submitError,
   onSubmit,
   onClose,
+  fixedStudent,
 }: AssignmentFormDialogProps): React.ReactNode {
   const { data: roster } = useInstructorRoster();
-  const [studentIds, setStudentIds] = useState<string[]>([]);
+  const [studentIds, setStudentIds] = useState<string[]>(fixedStudent ? [fixedStudent.id] : []);
   const [starterFileName, setStarterFileName] = useState<string | null>(null);
   const [starterFileError, setStarterFileError] = useState<string | null>(null);
   const [starterCode, setStarterCode] = useState<string | undefined>(undefined);
@@ -96,6 +99,11 @@ export function AssignmentFormDialog({
     [roster],
   );
 
+  const searchRoster = async (query: string): Promise<MultiSelectOption[]> => {
+    const results = await api.instructor.roster.search(query);
+    return results.map((link) => ({ id: link.student.id, label: link.student.name, sublabel: link.student.email }));
+  };
+
   const submit = (values: AssignmentFormValues): void => {
     onSubmit({ ...values, starter_code: starterCode }, studentIds);
   };
@@ -103,7 +111,7 @@ export function AssignmentFormDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-gray-900">New Assignment</h2>
@@ -115,7 +123,7 @@ export function AssignmentFormDialog({
               id="assignment-title"
               autoFocus
               {...register('title', { required: 'Title is required', maxLength: 255 })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={isSubmitting}
             />
             {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>}
@@ -143,7 +151,7 @@ export function AssignmentFormDialog({
                 id="max-score"
                 type="number"
                 {...register('max_score', { required: true, valueAsNumber: true, min: 1 })}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 disabled={isSubmitting}
               />
             </div>
@@ -153,7 +161,7 @@ export function AssignmentFormDialog({
                 id="pass-threshold"
                 type="number"
                 {...register('pass_threshold', { required: true, valueAsNumber: true, min: 0 })}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 disabled={isSubmitting}
               />
             </div>
@@ -161,16 +169,25 @@ export function AssignmentFormDialog({
 
           <div>
             <p className="block text-sm font-medium text-gray-700">Assign to</p>
-            <div className="mt-1">
-              <MultiSelect
-                options={rosterOptions}
-                selected={studentIds}
-                onChange={setStudentIds}
-                placeholder={rosterOptions.length === 0 ? 'No students on your roster yet' : 'Search students…'}
-              />
-            </div>
-            {studentIds.length === 0 && (
-              <p className="mt-1 text-sm text-gray-400">Select at least one student.</p>
+            {fixedStudent ? (
+              <p className="mt-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                {fixedStudent.name}
+              </p>
+            ) : (
+              <>
+                <div className="mt-1">
+                  <MultiSelect
+                    options={rosterOptions}
+                    selected={studentIds}
+                    onChange={setStudentIds}
+                    remoteSearch={searchRoster}
+                    placeholder={rosterOptions.length === 0 ? 'No students on your roster yet' : 'Search by name or email…'}
+                  />
+                </div>
+                {studentIds.length === 0 && (
+                  <p className="mt-1 text-sm text-gray-400">Select at least one student.</p>
+                )}
+              </>
             )}
           </div>
 
@@ -222,14 +239,14 @@ export function AssignmentFormDialog({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || studentIds.length === 0}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
             >
               {isSubmitting ? 'Creating…' : 'Create Assignment'}
             </button>

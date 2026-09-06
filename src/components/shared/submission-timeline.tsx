@@ -8,6 +8,7 @@ const LABELS: Record<SubmissionEvent['type'], string> = {
   REVISION_REQUESTED: 'Revision requested',
   GRADED: 'Graded',
   CANCELLED: 'Review request cancelled',
+  REOPENED: 'Reopen request resolved',
 };
 
 function formatDate(iso: string): string {

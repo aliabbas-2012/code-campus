@@ -50,21 +50,21 @@ export default function NotificationsPage(): React.ReactNode {
             <button type="button" onClick={() => router.push(homeHref)} className="text-sm font-medium text-gray-500 hover:text-gray-700">
               ← Back
             </button>
-            <h1 className="mt-1 text-2xl font-bold text-gray-900">Notifications</h1>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900">Notifications</h1>
           </div>
           {data && data.unreadCount > 0 && (
             <button
               type="button"
               onClick={() => markAllRead.mutate()}
               disabled={markAllRead.isPending}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
             >
               Mark all as read
             </button>
           )}
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           {isLoading && <p className="p-4 text-sm text-gray-400">Loading…</p>}
           {!isLoading && (data?.notifications.length ?? 0) === 0 && (
             <p className="p-8 text-center text-sm text-gray-400">No notifications yet.</p>

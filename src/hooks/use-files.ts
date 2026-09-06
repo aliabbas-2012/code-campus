@@ -13,6 +13,7 @@ import type {
   CreatedFile,
   FileNode,
   FileWithContent,
+  ImportFilesResult,
   UpdateFileResult,
 } from '@/types/api';
 
@@ -92,6 +93,20 @@ export function useDeleteFile(projectId: string): UseMutationResult<{ success: t
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (fileId: string) => api.files.remove(fileId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.files(projectId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.storage });
+    },
+  });
+}
+
+export function useImportFiles(
+  projectId: string,
+): UseMutationResult<ImportFilesResult, Error, { file: File; parentId?: string | null }> {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ file, parentId }: { file: File; parentId?: string | null }) =>
+      api.files.import(projectId, file, parentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.files(projectId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.storage });

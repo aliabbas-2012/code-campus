@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams): Promise<N
     const auth = await getAuthContext();
     await verifyProjectAccess(auth, id, 'read');
 
-    const submission = await submissionService.getSubmission(id);
+    const submission = await submissionService.getSubmission(id, auth.user.role);
     return NextResponse.json(submission);
   } catch (error: unknown) {
     const { statusCode, message, code } = errorToResponse(error);
@@ -44,12 +44,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams): Promise<
 
       if (input.action === 'request_revision') {
         await submissionService.requestRevision(id, auth.user.id, input.feedback);
+      } else if (input.action === 'grade') {
+        await submissionService.grade(id, auth.user.id, input.score, input.summary);
       } else {
-        await submissionService.grade(id, auth.user.id, input.score);
+        await submissionService.requestReopen(id, auth.user.id, input.reason);
       }
     }
 
-    const submission = await submissionService.getSubmission(id);
+    const submission = await submissionService.getSubmission(id, auth.user.role);
     return NextResponse.json(submission);
   } catch (error: unknown) {
     const { statusCode, message, code } = errorToResponse(error);

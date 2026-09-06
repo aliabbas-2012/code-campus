@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export interface MultiSelectOption {
   id: string;
@@ -15,7 +15,16 @@ interface MultiSelectProps {
   placeholder?: string;
   allowCustom?: boolean;
   onCreateCustom?: (value: string) => void;
+  /**
+   * When provided, typing a query (debounced) fetches matching options from the
+   * server instead of filtering the already-loaded `options` locally. Clearing
+   * the query falls back to `options` (shown in full, scrollable) so the whole
+   * roster stays browsable without typing anything.
+   */
+  remoteSearch?: (query: string) => Promise<MultiSelectOption[]>;
 }
+
+const REMOTE_SEARCH_DEBOUNCE_MS = 300;
 
 export function MultiSelect({
   options,
@@ -24,23 +33,56 @@ export function MultiSelect({
   placeholder = 'Search…',
   allowCustom = false,
   onCreateCustom,
+  remoteSearch,
 }: MultiSelectProps): React.ReactNode {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  const [remoteResults, setRemoteResults] = useState<MultiSelectOption[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchSeqRef = useRef(0);
 
   const selectedOptions = useMemo(
     () => selected.map((id) => options.find((o) => o.id === id)).filter((o): o is MultiSelectOption => !!o),
     [selected, options],
   );
 
+  useEffect(() => {
+    if (!remoteSearch) return;
+    const trimmed = query.trim();
+    if (!trimmed) {
+      queueMicrotask(() => {
+        setRemoteResults(null);
+        setIsSearching(false);
+      });
+      return;
+    }
+
+    const seq = ++searchSeqRef.current;
+    queueMicrotask(() => setIsSearching(true));
+    const timer = setTimeout(() => {
+      remoteSearch(trimmed)
+        .then((results) => {
+          if (searchSeqRef.current === seq) {
+            setRemoteResults(results);
+            setIsSearching(false);
+          }
+        })
+        .catch(() => {
+          if (searchSeqRef.current === seq) setIsSearching(false);
+        });
+    }, REMOTE_SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [query, remoteSearch]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return options
+    const source = remoteSearch && remoteResults !== null ? remoteResults : options;
+    return source
       .filter((o) => !selected.includes(o.id))
-      .filter((o) => !q || o.label.toLowerCase().includes(q) || o.sublabel?.toLowerCase().includes(q))
-      .slice(0, 20);
-  }, [options, selected, query]);
+      .filter((o) => remoteSearch || !q || o.label.toLowerCase().includes(q) || o.sublabel?.toLowerCase().includes(q));
+  }, [options, remoteResults, remoteSearch, selected, query]);
 
   const exactMatch = filtered.some((o) => o.label.toLowerCase() === query.trim().toLowerCase());
   const canCreate = allowCustom && query.trim().length > 0 && !exactMatch;
@@ -114,8 +156,11 @@ export function MultiSelect({
         />
       </div>
 
-      {open && (filtered.length > 0 || canCreate) && (
-        <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+      {open && (filtered.length > 0 || canCreate || isSearching) && (
+        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+          {isSearching && (
+            <li className="px-3 py-1.5 text-xs text-gray-400">Searching…</li>
+          )}
           {filtered.map((opt) => (
             <li key={opt.id}>
               <button

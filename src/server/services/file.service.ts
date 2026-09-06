@@ -1,3 +1,4 @@
+import AdmZip from 'adm-zip';
 import { db } from '@/lib/prisma';
 import { IStorageService } from '@/server/storage/storage.interface';
 import { defaultStorageService } from '@/server/storage/local-filesystem.storage';
@@ -11,6 +12,17 @@ import {
 } from '@/server/errors';
 import { CONFIG, validateFilename, validateFileSize, validateFileExtension } from '@/lib/config';
 import { CreateFileInput, UpdateFileInput, CreateFolderInput } from '@/server/validation/schemas';
+
+// Noise that common zip tools add automatically — skipped rather than rejected, since
+// it isn't content the student actually put there.
+const IGNORED_ARCHIVE_ENTRY_PATTERNS = [/^__MACOSX\//, /(^|\/)\.DS_Store$/, /(^|\/)Thumbs\.db$/i];
+const MAX_IMPORT_ENTRIES = 200;
+const MAX_IMPORT_TOTAL_BYTES = 5 * 1024 * 1024;
+
+interface ArchiveFileEntry {
+  path: string;
+  content: string;
+}
 
 export class FileService {
   constructor(private storageService: IStorageService = defaultStorageService) {}
@@ -166,6 +178,127 @@ export class FileService {
     });
 
     return folder;
+  }
+
+  /**
+   * Import a ZIP archive into a project, recreating its folder structure and
+   * files. Rejects the whole archive (extracting nothing) if any entry falls
+   * outside the same rules that apply to files created by hand — an unsupported
+   * extension, an unsafe path, or a size that violates the usual per-file/quota
+   * limits — since a partially-imported project is worse than a clear error.
+   */
+  async importZip(
+    projectId: string,
+    workspaceId: string,
+    parentId: string | null,
+    zipBuffer: Buffer,
+  ): Promise<{ createdFiles: number; createdFolders: number }> {
+    let zip: AdmZip;
+    try {
+      zip = new AdmZip(zipBuffer);
+    } catch {
+      throw new ValidationError('This does not look like a valid ZIP file');
+    }
+
+    const rawEntries = zip.getEntries();
+    const fileEntries: ArchiveFileEntry[] = [];
+    const folderPaths = new Set<string>();
+
+    for (const entry of rawEntries) {
+      const entryName = entry.entryName.replace(/\\/g, '/');
+      if (entry.isDirectory || IGNORED_ARCHIVE_ENTRY_PATTERNS.some((re) => re.test(entryName))) {
+        continue;
+      }
+
+      if (entryName.startsWith('/') || entryName.includes('..')) {
+        throw new SecurityError(`Unsafe path in archive: ${entryName}`);
+      }
+
+      const segments = entryName.split('/').filter(Boolean);
+      if (segments.length === 0) continue;
+
+      for (const segment of segments) {
+        if (!validateFilename(segment)) {
+          throw new ValidationError(`Invalid file or folder name in archive: "${segment}"`);
+        }
+      }
+
+      const filename = segments[segments.length - 1];
+      if (!validateFileExtension(filename)) {
+        throw new ValidationError(
+          `"${entryName}" has an unsupported file type. Only ${CONFIG.SUPPORTED_FILE_EXTENSIONS.join(', ')} files can be imported.`,
+        );
+      }
+
+      for (let i = 1; i < segments.length; i++) {
+        folderPaths.add(segments.slice(0, i).join('/'));
+      }
+
+      fileEntries.push({ path: entryName, content: entry.getData().toString('utf-8') });
+    }
+
+    if (fileEntries.length === 0) {
+      throw new ValidationError('This ZIP file does not contain any importable files.');
+    }
+    if (fileEntries.length > MAX_IMPORT_ENTRIES) {
+      throw new ValidationError(`Archive contains too many files (max ${MAX_IMPORT_ENTRIES}).`);
+    }
+
+    let totalBytes = 0;
+    for (const entry of fileEntries) {
+      const bytes = Buffer.byteLength(entry.content, 'utf-8');
+      if (!validateFileSize(bytes)) {
+        throw new ValidationError(`"${entry.path}" exceeds the maximum file size.`);
+      }
+      totalBytes += bytes;
+    }
+    if (totalBytes > MAX_IMPORT_TOTAL_BYTES) {
+      throw new ValidationError(
+        `Archive contents exceed the ${MAX_IMPORT_TOTAL_BYTES / (1024 * 1024)}MB import limit.`,
+      );
+    }
+
+    const hasQuota = await workspaceService.checkQuota(workspaceId, BigInt(totalBytes));
+    if (!hasQuota) {
+      throw new QuotaExceededError('Not enough storage quota available for this import');
+    }
+
+    // Create folders shallowest-first so each one's parent already exists.
+    const folderIdByPath = new Map<string, string | null>([['', parentId]]);
+    const sortedFolderPaths = [...folderPaths].sort(
+      (a, b) => a.split('/').length - b.split('/').length,
+    );
+
+    for (const folderPath of sortedFolderPaths) {
+      const segments = folderPath.split('/');
+      const name = segments[segments.length - 1];
+      const parentPath = segments.slice(0, -1).join('/');
+      const targetParentId = folderIdByPath.get(parentPath) ?? parentId;
+
+      const existing = await db.projectFile.findFirst({
+        where: { project_id: projectId, parent_id: targetParentId, name, type: 'FOLDER' },
+      });
+      if (existing) {
+        folderIdByPath.set(folderPath, existing.id);
+        continue;
+      }
+
+      const folder = await this.createFolder(projectId, { name, parent_id: targetParentId });
+      folderIdByPath.set(folderPath, folder.id);
+    }
+
+    let createdFiles = 0;
+    for (const entry of fileEntries) {
+      const segments = entry.path.split('/');
+      const name = segments[segments.length - 1];
+      const parentPath = segments.slice(0, -1).join('/');
+      const targetParentId = folderIdByPath.get(parentPath) ?? parentId;
+
+      await this.createFile(projectId, workspaceId, { name, content: entry.content, parent_id: targetParentId });
+      createdFiles += 1;
+    }
+
+    return { createdFiles, createdFolders: folderPaths.size };
   }
 
   /**

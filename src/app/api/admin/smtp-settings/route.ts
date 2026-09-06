@@ -9,7 +9,7 @@ export async function GET(): Promise<NextResponse> {
     const auth = await getAuthContext();
     await requireRole(auth, 'ADMIN');
     const settings = await smtpSettingsService.get();
-    return NextResponse.json(settings ? { ...settings, password: settings.password ? '••••••••' : '' } : null);
+    return NextResponse.json(settings);
   } catch (error: unknown) {
     const { statusCode, message, code } = errorToResponse(error);
     return NextResponse.json({ message, code }, { status: statusCode });
@@ -22,15 +22,8 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
     await requireRole(auth, 'ADMIN');
     const body = await req.json();
     const input = SmtpSettingsSchema.parse(body);
-
-    // Keep the existing password if the client sent back the masked placeholder unchanged.
-    if (input.password === '••••••••') {
-      const existing = await smtpSettingsService.get();
-      input.password = existing?.password ?? undefined;
-    }
-
     const settings = await smtpSettingsService.upsert(input);
-    return NextResponse.json({ ...settings, password: settings.password ? '••••••••' : '' });
+    return NextResponse.json(settings);
   } catch (error: unknown) {
     const { statusCode, message, code } = errorToResponse(error);
     return NextResponse.json({ message, code }, { status: statusCode });

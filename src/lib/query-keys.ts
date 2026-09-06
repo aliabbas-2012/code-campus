@@ -18,4 +18,11 @@ export const queryKeys = {
   studentGuidelines: ['student', 'guidelines'] as const,
   adminSmtpSettings: ['admin', 'smtp-settings'] as const,
   instructorReport: ['instructor', 'report'] as const,
+  adminUsersPaged: (params: Record<string, unknown>) => ['admin', 'users', 'paged', params] as const,
+  adminUserDetail: (id: string) => ['admin', 'users', id] as const,
+  adminUserAggregates: (id: string) => ['admin', 'users', id, 'aggregates'] as const,
+  instructorProfile: ['instructor', 'profile'] as const,
+  studentInstructorProfile: (id: string) => ['student', 'instructors', id, 'profile'] as const,
+  studentProfile: ['student', 'profile'] as const,
+  instructorStudentProfile: (id: string) => ['instructor', 'students', id, 'profile'] as const,
 };

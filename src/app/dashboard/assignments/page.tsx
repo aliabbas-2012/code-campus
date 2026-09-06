@@ -1,5 +1,5 @@
-import { AssignmentList } from '@/components/student/assignment-list';
+import { redirect } from 'next/navigation';
 
-export default function StudentAssignmentsPage(): React.ReactNode {
-  return <AssignmentList />;
+export default function StudentAssignmentsPage(): never {
+  redirect('/dashboard');
 }

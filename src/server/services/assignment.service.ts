@@ -127,7 +127,7 @@ export class AssignmentService {
       title: string;
       max_score: number;
       pass_threshold: number;
-      instructor: { name: string };
+      instructor: { id: string; name: string };
       submission: { status: string; score: number | null; passed: boolean | null; project_id: string } | null;
     }>
   > {
@@ -136,7 +136,7 @@ export class AssignmentService {
       include: {
         assignment: {
           include: {
-            instructor: { select: { name: true } },
+            instructor: { select: { id: true, name: true } },
             projects: {
               where: { workspace: { user_id: studentId } },
               include: { submission: true },
@@ -157,9 +157,9 @@ export class AssignmentService {
         instructor: assignment.instructor,
         submission: project?.submission
           ? {
-              status: project.submission.status,
-              score: project.submission.score,
-              passed: project.submission.passed,
+              status: project.submission.on_hold ? 'SUBMITTED' : project.submission.status,
+              score: project.submission.on_hold ? null : project.submission.score,
+              passed: project.submission.on_hold ? null : project.submission.passed,
               project_id: project.id,
             }
           : null,
@@ -282,7 +282,7 @@ export class AssignmentService {
       include: {
         assignment: {
           include: {
-            instructor: { select: { name: true } },
+            instructor: { select: { id: true, name: true } },
             projects: {
               where: { workspace: { user_id: studentId } },
               include: {
@@ -301,6 +301,7 @@ export class AssignmentService {
     }
 
     const project = link.assignment.projects[0];
+    const submission = project?.submission;
 
     return {
       id: link.assignment.id,
@@ -310,7 +311,10 @@ export class AssignmentService {
       pass_threshold: link.assignment.pass_threshold,
       instructor: link.assignment.instructor,
       project_id: project?.id ?? null,
-      submission: project?.submission ?? null,
+      submission:
+        submission && submission.on_hold
+          ? { ...submission, status: 'SUBMITTED' as const, score: null, passed: null }
+          : (submission ?? null),
     };
   }
 }

@@ -19,6 +19,33 @@
 
 body {
   @apply bg-background text-foreground;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: #c7d2fe;
+  color: #1e1b4b;
+}
+
+/* Slim, unobtrusive scrollbars for the data-dense table/list views. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 button:not(:disabled),
@@ -40,4 +67,21 @@ button:disabled,
   font-size: 11px;
   line-height: 1;
   margin-left: 2px;
+}
+
+.line-comment-add-hint::before {
+  content: '+';
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  margin-left: 4px;
+  color: #6366f1;
+}
+
+.line-comment-marker-resolved::before {
+  content: '✅';
+  font-size: 10px;
+  line-height: 1;
+  margin-left: 2px;
+  opacity: 0.6;
 }

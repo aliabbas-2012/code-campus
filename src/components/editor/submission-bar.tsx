@@ -5,6 +5,7 @@ import { useSubmission, useSubmissionAction } from '@/hooks/use-submission';
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api';
 import { SubmissionTimeline } from '@/components/shared/submission-timeline';
+import { PassFailBadge } from '@/components/shared/pass-fail-badge';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -64,11 +65,9 @@ export function SubmissionBar({ projectId }: { projectId: string }): React.React
           {STATUS_LABELS[submission.status]}
         </span>
         {submission.status === 'GRADED' && (
-          <span className="text-sm font-medium text-gray-700">
-            {submission.score}/{submission.assignment.max_score} —{' '}
-            <span className={submission.passed ? 'text-emerald-700' : 'text-red-700'}>
-              {submission.passed ? 'Pass' : 'Fail'}
-            </span>
+          <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+            {submission.score}/{submission.assignment.max_score}
+            <PassFailBadge passed={submission.passed} />
           </span>
         )}
         {submission.status === 'SUBMITTED' && (
@@ -87,7 +86,7 @@ export function SubmissionBar({ projectId }: { projectId: string }): React.React
               type="button"
               onClick={handleCancel}
               disabled={action.isPending}
-              className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-50"
             >
               Cancel Review Request
             </button>

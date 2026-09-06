@@ -49,7 +49,7 @@ export const CreateUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   name: z.string().min(1, 'Name is required').max(255),
-  role: z.enum(['INSTRUCTOR', 'STUDENT']),
+  role: z.enum(['ADMIN', 'INSTRUCTOR', 'STUDENT']),
 });
 
 // Admin: instructor roster
@@ -92,8 +92,21 @@ export const SubmissionActionSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('grade'),
     score: z.number().int().nonnegative(),
+    summary: z.string().max(5000).optional(),
+  }),
+  z.object({
+    action: z.literal('request_reopen'),
+    reason: z.string().max(2000).optional(),
   }),
 ]);
+
+export const ResolveReopenRequestSchema = z.object({
+  approve: z.boolean(),
+});
+
+export const ResolveLineCommentSchema = z.object({
+  resolved: z.boolean(),
+});
 
 // Line comments
 export const CreateLineCommentSchema = z.object({
@@ -118,6 +131,32 @@ export const SmtpSettingsSchema = z.object({
   enabled: z.boolean(),
 });
 
+export const UpdateInstructorProfileSchema = z.object({
+  title: z.string().max(255).optional(),
+  bio: z.string().max(5000).optional(),
+  specializations: z.array(z.string().min(1).max(50)).max(20),
+});
+
+export const UpdateStudentProfileSchema = z.object({
+  bio: z.string().max(5000).optional(),
+  interests: z.array(z.string().min(1).max(50)).max(20),
+});
+
+export const ChangePasswordSchema = z.object({
+  current_password: z.string().min(1, 'Current password is required'),
+  new_password: z.string().min(8, 'New password must be at least 8 characters'),
+});
+
+export const SendTestSmtpEmailSchema = z.object({
+  host: z.string().min(1, 'Host is required').max(255),
+  port: z.number().int().positive().max(65535),
+  secure: z.boolean(),
+  username: z.string().max(255).optional(),
+  password: z.string().max(255).optional(),
+  from_email: z.string().email('Must be a valid email address'),
+  from_name: z.string().min(1).max(255),
+});
+
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type SignupInput = z.infer<typeof SignupSchema>;
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;
@@ -127,9 +166,15 @@ export type UpdateFileInput = z.infer<typeof UpdateFileSchema>;
 export type CreateLineCommentInput = z.infer<typeof CreateLineCommentSchema>;
 export type UpdateGuidelinesInput = z.infer<typeof UpdateGuidelinesSchema>;
 export type SmtpSettingsInput = z.infer<typeof SmtpSettingsSchema>;
+export type UpdateInstructorProfileInput = z.infer<typeof UpdateInstructorProfileSchema>;
+export type UpdateStudentProfileInput = z.infer<typeof UpdateStudentProfileSchema>;
+export type SendTestSmtpEmailInput = z.infer<typeof SendTestSmtpEmailSchema>;
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
 export type CreateFolderInput = z.infer<typeof CreateFolderSchema>;
 export type CreateUserInput = z.infer<typeof CreateUserSchema>;
 export type CreateInstructorStudentInput = z.infer<typeof CreateInstructorStudentSchema>;
 export type CreateAssignmentInput = z.infer<typeof CreateAssignmentSchema>;
 export type AddAssignmentStudentsInput = z.infer<typeof AddAssignmentStudentsSchema>;
 export type SubmissionActionInput = z.infer<typeof SubmissionActionSchema>;
+export type ResolveReopenRequestInput = z.infer<typeof ResolveReopenRequestSchema>;
+export type ResolveLineCommentInput = z.infer<typeof ResolveLineCommentSchema>;

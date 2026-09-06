@@ -33,7 +33,7 @@ export function ConfirmDialog({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-lg bg-white p-6 shadow-lg"
+        className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
@@ -42,7 +42,7 @@ export function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
           >
             Cancel
           </button>

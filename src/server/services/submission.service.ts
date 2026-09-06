@@ -57,7 +57,7 @@ export class SubmissionService {
     return { project_id: project.id };
   }
 
-  async getSubmission(projectId: string) {
+  async getSubmission(projectId: string, viewerRole?: 'STUDENT' | 'INSTRUCTOR' | 'ADMIN') {
     const project = await db.project.findUnique({
       where: { id: projectId },
       select: { assignment_id: true },
@@ -71,8 +71,15 @@ export class SubmissionService {
       include: {
         assignment: { select: { id: true, title: true, max_score: true, pass_threshold: true } },
         events: { orderBy: { created_at: 'asc' }, include: { actor: { select: { name: true } } } },
+        reopen_requests: { orderBy: { created_at: 'desc' }, take: 1 },
       },
     });
+
+    if (!submission) return null;
+
+    if (viewerRole === 'STUDENT' && submission.on_hold) {
+      return { ...submission, status: 'SUBMITTED' as const, score: null, passed: null };
+    }
 
     return submission;
   }
@@ -161,7 +168,7 @@ export class SubmissionService {
     );
   }
 
-  async grade(projectId: string, instructorId: string, score: number): Promise<void> {
+  async grade(projectId: string, instructorId: string, score: number, summary?: string): Promise<void> {
     const submission = await this.loadForInstructor(projectId, instructorId);
     if (submission.status !== 'SUBMITTED') {
       throw new ValidationError('Only a submitted project can be graded');
@@ -178,7 +185,7 @@ export class SubmissionService {
         data: { status: 'GRADED', score, passed, graded_at: new Date(), graded_by_id: instructorId },
       }),
       db.submissionEvent.create({
-        data: { submission_id: submission.id, type: 'GRADED', actor_id: instructorId, score },
+        data: { submission_id: submission.id, type: 'GRADED', actor_id: instructorId, score, feedback: summary },
       }),
     ]);
 
@@ -188,6 +195,104 @@ export class SubmissionService {
       'Assignment graded',
       `"${assignment.title}" was graded: ${score}/${assignment.max_score} (${passed ? 'Pass' : 'Fail'}).`,
       `/dashboard/assignments/${assignment.id}`,
+    );
+  }
+
+  /** Instructor asks an admin to reopen a graded submission — the grade is hidden from the student while pending. */
+  async requestReopen(projectId: string, instructorId: string, reason?: string): Promise<void> {
+    const submission = await this.loadForInstructor(projectId, instructorId);
+    if (submission.status !== 'GRADED') {
+      throw new ValidationError('Only a graded submission can have a reopen requested');
+    }
+    const existing = await db.reopenRequest.findFirst({
+      where: { submission_id: submission.id, status: 'PENDING' },
+    });
+    if (existing) {
+      throw new ValidationError('A reopen request is already pending for this submission');
+    }
+
+    const assignment = await db.assignment.findUniqueOrThrow({ where: { id: submission.assignment_id } });
+
+    await db.$transaction([
+      db.submission.update({ where: { id: submission.id }, data: { on_hold: true } }),
+      db.reopenRequest.create({
+        data: { submission_id: submission.id, requested_by_id: instructorId, reason },
+      }),
+    ]);
+
+    const admins = await db.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+    await Promise.all(
+      admins.map((admin) =>
+        notificationService.create(
+          admin.id,
+          'REOPEN_REQUESTED',
+          'Reopen request',
+          `An instructor requested to reopen "${assignment.title}" for a student.`,
+          `/admin/reopen-requests`,
+        ),
+      ),
+    );
+  }
+
+  async listPendingReopenRequests() {
+    return db.reopenRequest.findMany({
+      where: { status: 'PENDING' },
+      orderBy: { created_at: 'asc' },
+      include: {
+        requested_by: { select: { name: true, email: true } },
+        submission: {
+          include: {
+            assignment: { select: { title: true } },
+            student: { select: { name: true, email: true } },
+          },
+        },
+      },
+    });
+  }
+
+  async resolveReopenRequest(requestId: string, adminId: string, approve: boolean): Promise<void> {
+    const request = await db.reopenRequest.findUnique({
+      where: { id: requestId },
+      include: { submission: { include: { assignment: true } } },
+    });
+    if (!request) {
+      throw new NotFoundError('Reopen request not found');
+    }
+    if (request.status !== 'PENDING') {
+      throw new ValidationError('This reopen request has already been resolved');
+    }
+
+    const newStatus = approve ? 'APPROVED' : 'DECLINED';
+
+    await db.$transaction([
+      db.reopenRequest.update({
+        where: { id: requestId },
+        data: { status: newStatus, resolved_by_id: adminId, resolved_at: new Date() },
+      }),
+      db.submission.update({
+        where: { id: request.submission_id },
+        data: approve
+          ? { on_hold: false, status: 'IN_PROGRESS', score: null, passed: null, graded_at: null, graded_by_id: null }
+          : { on_hold: false },
+      }),
+      db.submissionEvent.create({
+        data: {
+          submission_id: request.submission_id,
+          type: 'REOPENED',
+          actor_id: adminId,
+          feedback: approve ? 'Reopen request approved by admin.' : 'Reopen request declined by admin.',
+        },
+      }),
+    ]);
+
+    await notificationService.create(
+      request.requested_by_id,
+      approve ? 'REOPEN_APPROVED' : 'REOPEN_DECLINED',
+      approve ? 'Reopen approved' : 'Reopen declined',
+      approve
+        ? `Admin approved reopening "${request.submission.assignment.title}" — the student can edit and resubmit.`
+        : `Admin declined reopening "${request.submission.assignment.title}" — the grade stands.`,
+      `/review/${request.submission.project_id}`,
     );
   }
 
@@ -205,7 +310,7 @@ export class SubmissionService {
     return db.lineComment.findMany({
       where: { file_id: fileId },
       orderBy: { line_number: 'asc' },
-      include: { author: { select: { name: true } } },
+      include: { author: { select: { name: true } }, resolved_by: { select: { name: true } } },
     });
   }
 
@@ -235,8 +340,65 @@ export class SubmissionService {
         comment,
         author_id: instructorId,
       },
-      include: { author: { select: { name: true } } },
+      include: { author: { select: { name: true } }, resolved_by: { select: { name: true } } },
     });
+  }
+
+  /**
+   * Resolving is the student marking a comment addressed (GitHub-PR style); reopening
+   * is the instructor disagreeing and putting it back to open. Each direction is
+   * restricted to the role that's allowed to make that call.
+   */
+  async setLineCommentResolved(
+    commentId: string,
+    actorId: string,
+    actorRole: 'STUDENT' | 'INSTRUCTOR',
+    resolved: boolean,
+  ) {
+    const comment = await db.lineComment.findUnique({
+      where: { id: commentId },
+      include: { submission: { include: { assignment: true } } },
+    });
+    if (!comment) {
+      throw new NotFoundError('Comment not found');
+    }
+
+    if (actorRole === 'STUDENT') {
+      if (comment.submission.student_id !== actorId) {
+        throw new AuthorizationError('Access denied', 'FORBIDDEN');
+      }
+      if (!resolved) {
+        throw new AuthorizationError('Only the instructor can reopen a resolved comment', 'FORBIDDEN');
+      }
+    } else {
+      if (comment.submission.assignment.instructor_id !== actorId) {
+        throw new AuthorizationError('This is not your assignment', 'FORBIDDEN');
+      }
+    }
+
+    return db.lineComment.update({
+      where: { id: commentId },
+      data: resolved
+        ? { resolved: true, resolved_by_id: actorId, resolved_at: new Date() }
+        : { resolved: false, resolved_by_id: null, resolved_at: null },
+      include: { author: { select: { name: true } }, resolved_by: { select: { name: true } } },
+    });
+  }
+
+  /** Only the reviewing instructor can delete a comment outright — students can only resolve it. */
+  async deleteLineComment(commentId: string, instructorId: string): Promise<void> {
+    const comment = await db.lineComment.findUnique({
+      where: { id: commentId },
+      include: { submission: { include: { assignment: true } } },
+    });
+    if (!comment) {
+      throw new NotFoundError('Comment not found');
+    }
+    if (comment.submission.assignment.instructor_id !== instructorId) {
+      throw new AuthorizationError('This is not your assignment', 'FORBIDDEN');
+    }
+
+    await db.lineComment.delete({ where: { id: commentId } });
   }
 
   private async loadForInstructor(projectId: string, instructorId: string) {

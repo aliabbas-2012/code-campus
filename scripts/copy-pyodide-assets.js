@@ -34,7 +34,16 @@ function main() {
     fs.copyFileSync(src, dest);
   }
 
-  console.log(`[copy-pyodide-assets] Copied Pyodide runtime to public/pyodide (v${require(path.join(SRC_DIR, 'package.json')).version}).`);
+  const version = require(path.join(SRC_DIR, 'package.json')).version;
+
+  // Individual package wheels (numpy, pandas, ...) aren't part of the npm package and would
+  // be impractical to vendor here (hundreds of packages, easily gigabytes) — only the core
+  // runtime above is self-hosted. The worker reads this file to fetch packages from
+  // Pyodide's own release CDN instead, at the exact version installed, so it can never
+  // request a wheel from a mismatched release.
+  fs.writeFileSync(path.join(DEST_DIR, 'version.txt'), version);
+
+  console.log(`[copy-pyodide-assets] Copied Pyodide runtime to public/pyodide (v${version}).`);
 }
 
 main();

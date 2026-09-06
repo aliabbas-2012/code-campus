@@ -49,9 +49,22 @@ export class RosterService {
 
   async listForInstructor(
     instructorId: string,
+    search?: string,
   ): Promise<Array<{ id: string; student: { id: string; name: string; email: string } }>> {
     return db.instructorStudents.findMany({
-      where: { instructor_id: instructorId },
+      where: {
+        instructor_id: instructorId,
+        ...(search
+          ? {
+              student: {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { email: { contains: search, mode: 'insensitive' } },
+                ],
+              },
+            }
+          : {}),
+      },
       select: {
         id: true,
         student: { select: { id: true, name: true, email: true } },

@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { NotificationBell } from '@/components/shared/notification-bell';
+import { UserMenu } from '@/components/shared/user-menu';
+import { Logo } from '@/components/shared/logo';
 import { usePresenceHeartbeat } from '@/hooks/use-presence';
 
 const NAV = [
-  { href: '/dashboard', label: 'My Projects' },
-  { href: '/dashboard/assignments', label: 'Assignments' },
+  { href: '/dashboard', label: 'Assignments' },
+  { href: '/dashboard/projects', label: 'Projects' },
   { href: '/dashboard/report', label: 'Report' },
   { href: '/dashboard/guidelines', label: 'Guidelines' },
 ];
@@ -43,19 +45,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
-            <span className="font-semibold text-gray-900">Code Campus</span>
-            <nav className="flex gap-1">
+            <Link href="/dashboard">
+              <Logo />
+            </Link>
+            <nav className="hidden gap-1 md:flex">
               {NAV.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                     pathname === item.href
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-indigo-50 font-semibold text-indigo-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
                   {item.label}
@@ -65,17 +69,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className="flex items-center gap-3">
             <NotificationBell />
-            <button
-              type="button"
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="text-sm font-medium text-gray-500 hover:text-gray-700"
-            >
-              Sign out
-            </button>
+            <UserMenu
+              name={session.user.name ?? ''}
+              email={session.user.email ?? ''}
+              role={session.user.role}
+              profileHref="/dashboard/profile"
+            />
           </div>
         </div>
+        <nav className="flex gap-1 overflow-x-auto border-t border-gray-100 px-4 py-2 sm:px-6 md:hidden">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                pathname === item.href
+                  ? 'bg-indigo-50 font-semibold text-indigo-700'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </header>
-      {children}
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 }

@@ -8,7 +8,7 @@ export interface UserFormValues {
   name: string;
   email: string;
   password: string;
-  role: 'INSTRUCTOR' | 'STUDENT';
+  role: 'ADMIN' | 'INSTRUCTOR' | 'STUDENT';
 }
 
 interface UserFormDialogProps {
@@ -35,7 +35,10 @@ export function UserFormDialog({ isSubmitting, submitError, onSubmit, onClose }:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="text-lg font-semibold text-gray-900">New User</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
@@ -45,7 +48,7 @@ export function UserFormDialog({ isSubmitting, submitError, onSubmit, onClose }:
               id="user-name"
               autoFocus
               {...register('name', { required: 'Name is required', maxLength: 255 })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={isSubmitting}
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
@@ -57,7 +60,7 @@ export function UserFormDialog({ isSubmitting, submitError, onSubmit, onClose }:
               id="user-email"
               type="email"
               {...register('email', { required: 'Email is required' })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={isSubmitting}
             />
             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
@@ -69,7 +72,7 @@ export function UserFormDialog({ isSubmitting, submitError, onSubmit, onClose }:
               id="user-password"
               type="password"
               {...register('password', { required: 'Password is required', minLength: { value: 8, message: 'At least 8 characters' } })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={isSubmitting}
             />
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
@@ -80,11 +83,12 @@ export function UserFormDialog({ isSubmitting, submitError, onSubmit, onClose }:
             <select
               id="user-role"
               {...register('role')}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={isSubmitting}
             >
               <option value="STUDENT">Student</option>
               <option value="INSTRUCTOR">Instructor</option>
+              <option value="ADMIN">Admin</option>
             </select>
           </div>
 
@@ -95,14 +99,14 @@ export function UserFormDialog({ isSubmitting, submitError, onSubmit, onClose }:
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
             >
               {isSubmitting ? 'Creating…' : 'Create User'}
             </button>

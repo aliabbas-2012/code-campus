@@ -46,6 +46,17 @@ installed from `node_modules/pyodide`, so it can't drift from `package.json`.
 If Pyodide ever fails to load, first check `public/pyodide/` actually exists
 (run `npm install` if not) before assuming it's a code bug.
 
+Only the **core runtime** is self-hosted this way — the `pyodide` npm package
+doesn't ship individual package wheels (numpy, pandas, ...) at all, and
+vendoring all ~300 curated packages ourselves would be impractical. Those load
+on demand from Pyodide's own release CDN instead, via `packageBaseUrl` in
+`public/workers/pyodide-worker.js`, pinned to the exact version installed by
+reading `public/pyodide/version.txt` (also written by copy-pyodide-assets.js)
+— so it can never silently point at a mismatched release. If package imports
+(anything beyond the stdlib) fail with "Failed to fetch", check that
+`version.txt` exists and matches the installed `pyodide` version before
+assuming the package itself is broken.
+
 ## Local dev
 
 - Dev server runs on **port 3007** (`npm run dev`), not the Next default 3000.

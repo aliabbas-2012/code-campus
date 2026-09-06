@@ -69,6 +69,12 @@ export interface CreatedFile {
   type: 'FILE' | 'FOLDER';
 }
 
+export interface ImportFilesResult {
+  createdFiles: number;
+  createdFolders: number;
+  file?: CreatedFile;
+}
+
 // ---------- Roles: admin ----------
 
 export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'STUDENT';
@@ -79,14 +85,92 @@ export interface AdminUser {
   name: string;
   role: UserRole;
   status: string;
+  is_super_admin?: boolean;
   created_at?: string;
+}
+
+export interface AdminUserListResult {
+  items: AdminUser[];
+  total: number;
+}
+
+export interface AdminUserListParams {
+  role?: UserRole;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: 'name' | 'email' | 'role' | 'created_at';
+  sortDir?: 'asc' | 'desc';
+}
+
+export interface UserAggregates {
+  studentCount?: number;
+  assignmentCount?: number;
+}
+
+export interface UserDetailPerson {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface InstructorProfileData {
+  title: string | null;
+  bio: string | null;
+  specializations: string[];
+}
+
+export interface UpdateInstructorProfileInput {
+  title?: string;
+  bio?: string;
+  specializations: string[];
+}
+
+export interface PublicInstructorProfile {
+  id: string;
+  name: string;
+  email: string;
+  title: string | null;
+  bio: string | null;
+  specializations: string[];
+}
+
+export interface ChangePasswordInput {
+  current_password: string;
+  new_password: string;
+}
+
+export interface StudentProfileData {
+  bio: string | null;
+  interests: string[];
+}
+
+export interface UpdateStudentProfileInput {
+  bio?: string;
+  interests: string[];
+}
+
+export interface PublicStudentProfile {
+  id: string;
+  name: string;
+  email: string;
+  bio: string | null;
+  interests: string[];
+}
+
+export interface AdminUserDetail {
+  user: AdminUser & { instructor_profile: InstructorProfileData | null; student_profile: StudentProfileData | null };
+  students: UserDetailPerson[];
+  instructors: UserDetailPerson[];
+  assignments: Array<{ id: string; title: string; max_score: number; pass_threshold: number; created_at: string }>;
+  studentAssignments: StudentAssignmentSummary[];
 }
 
 export interface CreateUserInput {
   email: string;
   password: string;
   name: string;
-  role: 'INSTRUCTOR' | 'STUDENT';
+  role: 'ADMIN' | 'INSTRUCTOR' | 'STUDENT';
 }
 
 export interface RosterPerson {
@@ -160,17 +244,24 @@ export interface StudentAssignmentSummary {
   title: string;
   max_score: number;
   pass_threshold: number;
-  instructor: { name: string };
+  instructor: { id: string; name: string };
   submission: SubmissionSummary | null;
 }
 
 export interface SubmissionEvent {
   id: string;
-  type: 'SUBMITTED' | 'REVISION_REQUESTED' | 'GRADED' | 'CANCELLED';
+  type: 'SUBMITTED' | 'REVISION_REQUESTED' | 'GRADED' | 'CANCELLED' | 'REOPENED';
   feedback: string | null;
   score: number | null;
   created_at: string;
   actor: { name: string };
+}
+
+export interface ReopenRequestSummary {
+  id: string;
+  status: 'PENDING' | 'APPROVED' | 'DECLINED';
+  reason: string | null;
+  created_at: string;
 }
 
 export interface SubmissionDetail {
@@ -180,6 +271,8 @@ export interface SubmissionDetail {
   passed: boolean | null;
   submitted_at: string | null;
   graded_at: string | null;
+  on_hold: boolean;
+  reopen_requests: ReopenRequestSummary[];
   assignment: { id: string; title: string; max_score: number; pass_threshold: number };
   events: SubmissionEvent[];
 }
@@ -190,7 +283,7 @@ export interface StudentAssignmentDetail {
   description: string | null;
   max_score: number;
   pass_threshold: number;
-  instructor: { name: string };
+  instructor: { id: string; name: string };
   project_id: string | null;
   submission: SubmissionDetail | null;
 }
@@ -199,7 +292,8 @@ export type SubmissionActionInput =
   | { action: 'submit'; remarks?: string }
   | { action: 'cancel' }
   | { action: 'request_revision'; feedback: string }
-  | { action: 'grade'; score: number };
+  | { action: 'grade'; score: number; summary?: string }
+  | { action: 'request_reopen'; reason?: string };
 
 export interface StartAssignmentResult {
   project_id: string;
@@ -211,6 +305,9 @@ export interface LineComment {
   comment: string;
   created_at: string;
   author: { name: string };
+  resolved: boolean;
+  resolved_by: { name: string } | null;
+  resolved_at: string | null;
 }
 
 export interface CreateLineCommentInput {
@@ -220,12 +317,32 @@ export interface CreateLineCommentInput {
 
 export interface Notification {
   id: string;
-  type: 'SUBMISSION_RECEIVED' | 'REVISION_REQUESTED' | 'GRADED' | 'SUBMISSION_CANCELLED';
+  type:
+    | 'SUBMISSION_RECEIVED'
+    | 'REVISION_REQUESTED'
+    | 'GRADED'
+    | 'SUBMISSION_CANCELLED'
+    | 'REOPEN_REQUESTED'
+    | 'REOPEN_APPROVED'
+    | 'REOPEN_DECLINED';
   title: string;
   message: string;
   link: string | null;
   read: boolean;
   created_at: string;
+}
+
+export interface AdminReopenRequest {
+  id: string;
+  status: 'PENDING' | 'APPROVED' | 'DECLINED';
+  reason: string | null;
+  created_at: string;
+  requested_by: { name: string; email: string };
+  submission: {
+    project_id: string;
+    assignment: { title: string };
+    student: { name: string; email: string };
+  };
 }
 
 export interface NotificationsResponse {

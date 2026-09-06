@@ -41,10 +41,10 @@ export function ProjectList(): React.ReactNode {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Your Projects</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Your Projects</h1>
           <div className="mt-2">
             <StorageQuotaBar />
           </div>
@@ -52,7 +52,7 @@ export function ProjectList(): React.ReactNode {
         <button
           type="button"
           onClick={() => setShowCreate(true)}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
         >
           New Project
         </button>
@@ -81,7 +81,7 @@ export function ProjectList(): React.ReactNode {
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
           >
             New Project
           </button>

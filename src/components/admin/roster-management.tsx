@@ -6,6 +6,7 @@ import { useAdminRoster, useCreateRosterLink, useRemoveRosterLink } from '@/hook
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api';
 import { MultiSelect } from '@/components/ui/multi-select';
+import { SingleSelect } from '@/components/ui/single-select';
 
 export function RosterManagement(): React.ReactNode {
   const { data: instructors } = useAdminUsers('INSTRUCTOR');
@@ -49,26 +50,19 @@ export function RosterManagement(): React.ReactNode {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Rosters</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900">Rosters</h1>
       <p className="mt-1 text-sm text-gray-500">Assign which students belong to each instructor.</p>
 
       <div className="mt-6">
-        <label htmlFor="instructor-select" className="block text-sm font-medium text-gray-700">
-          Instructor
-        </label>
-        <select
-          id="instructor-select"
-          value={instructorId}
-          onChange={(e) => setInstructorId(e.target.value)}
-          className="mt-1 w-full max-w-sm rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="">Select an instructor…</option>
-          {instructors?.map((i) => (
-            <option key={i.id} value={i.id}>
-              {i.name} ({i.email})
-            </option>
-          ))}
-        </select>
+        <label className="block text-sm font-medium text-gray-700">Instructor</label>
+        <div className="mt-1">
+          <SingleSelect
+            options={(instructors ?? []).map((i) => ({ id: i.id, label: i.name, sublabel: i.email }))}
+            value={instructorId}
+            onChange={setInstructorId}
+            placeholder="Search instructors by name or email…"
+          />
+        </div>
       </div>
 
       {instructorId && (
@@ -110,7 +104,7 @@ export function RosterManagement(): React.ReactNode {
               type="button"
               onClick={handleAdd}
               disabled={selectedStudentIds.length === 0 || createLink.isPending}
-              className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
             >
               Add Selected
             </button>

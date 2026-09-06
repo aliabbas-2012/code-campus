@@ -7,6 +7,8 @@ const PASSWORD = 'password';
 
 const USERS = [
   { email: 'admin@example.com', name: 'Admin User', role: 'ADMIN' },
+  { email: 'admin2@example.com', name: 'Morgan Admin', role: 'ADMIN' },
+  { email: 'admin3@example.com', name: 'Jordan Admin', role: 'ADMIN' },
   { email: 'instructor@example.com', name: 'Instructor User', role: 'INSTRUCTOR' },
   { email: 'student@example.com', name: 'Student User', role: 'STUDENT' },
 ];
@@ -16,10 +18,11 @@ async function main() {
 
   const users = [];
   for (const u of USERS) {
+    const isSuperAdmin = u.email === 'admin@example.com';
     const user = await db.user.upsert({
       where: { email: u.email },
-      update: {},
-      create: { ...u, password_hash, status: 'ACTIVE' },
+      update: isSuperAdmin ? { is_super_admin: true } : {},
+      create: { ...u, password_hash, status: 'ACTIVE', is_super_admin: isSuperAdmin },
     });
     users.push(user);
   }

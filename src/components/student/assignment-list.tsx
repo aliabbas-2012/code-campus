@@ -22,8 +22,8 @@ export function AssignmentList(): React.ReactNode {
   const router = useRouter();
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900">Assignments</h1>
 
       {isLoading && <p className="mt-4 text-sm text-gray-400">Loading…</p>}
       {isError && <p className="mt-4 text-sm text-red-600">Failed to load assignments.</p>}
@@ -37,7 +37,7 @@ export function AssignmentList(): React.ReactNode {
                 key={a.id}
                 type="button"
                 onClick={() => router.push(`/dashboard/assignments/${a.id}`)}
-                className="rounded-lg border border-gray-200 bg-white p-5 text-left shadow-sm hover:border-indigo-300"
+                className="rounded-xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold text-gray-900">{a.title}</h3>

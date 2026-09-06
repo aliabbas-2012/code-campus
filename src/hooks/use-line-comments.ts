@@ -24,3 +24,25 @@ export function useCreateLineComment(
     },
   });
 }
+
+export function useSetLineCommentResolved(
+  fileId: string,
+): UseMutationResult<LineComment, Error, { commentId: string; resolved: boolean }> {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId, resolved }) => api.lineComments.setResolved(commentId, resolved),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.lineComments(fileId) });
+    },
+  });
+}
+
+export function useDeleteLineComment(fileId: string): UseMutationResult<{ success: true }, Error, string> {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (commentId: string) => api.lineComments.delete(commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.lineComments(fileId) });
+    },
+  });
+}

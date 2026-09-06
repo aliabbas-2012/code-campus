@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   useProjectFiles,
   useCreateFile,
   useCreateFolder,
   useRenameFile,
   useDeleteFile,
+  useImportFiles,
 } from '@/hooks/use-files';
 import { ApiError } from '@/lib/api';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -28,7 +29,9 @@ export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps
   const createFolder = useCreateFolder(projectId);
   const renameFile = useRenameFile(projectId);
   const deleteFile = useDeleteFile(projectId);
+  const importFiles = useImportFiles(projectId);
   const { showToast } = useToast();
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
@@ -85,6 +88,30 @@ export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps
       },
     );
     setRenamingId(null);
+  };
+
+  const handleImportChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (selectedFolderId) setExpandedIds((prev) => new Set(prev).add(selectedFolderId));
+    importFiles.mutate(
+      { file, parentId: selectedFolderId },
+      {
+        onSuccess: (result) => {
+          if (result.file) {
+            showToast(`Imported ${result.file.name}`, 'info');
+          } else {
+            const parts = [];
+            if (result.createdFiles > 0) parts.push(`${result.createdFiles} file${result.createdFiles === 1 ? '' : 's'}`);
+            if (result.createdFolders > 0) parts.push(`${result.createdFolders} folder${result.createdFolders === 1 ? '' : 's'}`);
+            showToast(`Imported ${parts.join(' and ')}`, 'info');
+          }
+        },
+        onError: (err) => showToast(err instanceof ApiError ? err.message : 'Failed to import archive'),
+      },
+    );
   };
 
   const confirmDelete = (): void => {
@@ -144,6 +171,22 @@ export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps
             >
               + Folder
             </button>
+            <button
+              type="button"
+              onClick={() => importInputRef.current?.click()}
+              disabled={importFiles.isPending}
+              title="Import a .zip archive or a single .py file"
+              className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+            >
+              {importFiles.isPending ? 'Importing…' : 'Import'}
+            </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".zip,.py"
+              onChange={handleImportChange}
+              className="hidden"
+            />
           </div>
         )}
         <div

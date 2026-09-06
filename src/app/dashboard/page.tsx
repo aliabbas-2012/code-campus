@@ -1,5 +1,5 @@
-import { ProjectList } from '@/components/dashboard/project-list';
+import { AssignmentList } from '@/components/student/assignment-list';
 
 export default function DashboardPage(): React.ReactNode {
-  return <ProjectList />;
+  return <AssignmentList />;
 }

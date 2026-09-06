@@ -16,7 +16,7 @@ export function ProjectCard({ project, onRename, onDelete }: ProjectCardProps): 
   return (
     <div
       onClick={() => router.push(`/projects/${project.id}`)}
-      className="group cursor-pointer rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+      className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
     >
       <div className="flex items-start justify-between">
         <h3 className="font-semibold text-gray-900">{project.name}</h3>

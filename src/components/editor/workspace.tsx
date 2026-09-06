@@ -12,6 +12,7 @@ import { useAutosave } from '@/hooks/use-autosave';
 import { useProject } from '@/hooks/use-projects';
 import { useProjectFiles } from '@/hooks/use-files';
 import { useSubmission } from '@/hooks/use-submission';
+import { pythonIntelliSenseContext, loadInstalledPackageNames, extractTopLevelSymbols } from '@/lib/python-intellisense';
 import { FileTree } from './file-tree';
 import { EditorTabs } from './editor-tabs';
 import { CodeEditor } from './code-editor';
@@ -28,12 +29,22 @@ interface WorkspaceProps {
   projectId: string;
   mode?: 'edit' | 'review';
   onBack?: () => void;
+  backLabel?: string;
   extraBar?: React.ReactNode;
+  /** Set false when this project is reached through its canonical assignment URL already. */
+  canonicalizeUrl?: boolean;
 }
 
-export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: WorkspaceProps): React.ReactNode {
+export function Workspace({
+  projectId,
+  mode = 'edit',
+  onBack,
+  backLabel,
+  extraBar,
+  canonicalizeUrl = true,
+}: WorkspaceProps): React.ReactNode {
   const router = useRouter();
-  const { status: sessionStatus } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const {
@@ -46,10 +57,20 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
     isInstalling,
     runRepl,
     mountFiles,
+    listStdlibModules,
+    introspectModule,
   } = usePythonWorker();
   const { data: project } = useProject(projectId);
   const { data: projectFiles } = useProjectFiles(projectId);
   const { data: submission } = useSubmission(mode === 'edit' && project?.assignment_id ? projectId : null);
+
+  // A student's assignment-linked project always has a canonical /dashboard/assignments/:id/workspace
+  // URL; visiting /projects/:id directly redirects there so back-navigation and browser history stay consistent.
+  useEffect(() => {
+    if (!canonicalizeUrl || mode !== 'edit' || !project?.assignment_id) return;
+    if (session?.user?.role !== 'STUDENT') return;
+    router.replace(`/dashboard/assignments/${project.assignment_id}/workspace`);
+  }, [canonicalizeUrl, mode, project?.assignment_id, session?.user?.role, router]);
 
   const [tabs, setTabs] = useState<OpenTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
@@ -168,6 +189,50 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
     }
   }, [shellMounted, workerStatus, projectFiles, mountFiles]);
 
+  // Keep the shared Python IntelliSense context fresh — the completion provider itself is
+  // registered once for the whole app, but reads this object live on every keystroke, so
+  // whichever workspace is currently open always drives its own suggestions.
+  useEffect(() => {
+    loadInstalledPackageNames().then((names) => {
+      pythonIntelliSenseContext.installedPackages = names;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (workerStatus !== 'ready') return;
+    let cancelled = false;
+    listStdlibModules().then((modules) => {
+      if (!cancelled) pythonIntelliSenseContext.stdlibModules = modules;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [workerStatus, listStdlibModules]);
+
+  useEffect(() => {
+    pythonIntelliSenseContext.localModules = (projectFiles ?? [])
+      .filter((f) => f.type === 'FILE' && f.name.endsWith('.py'))
+      .map((f) => ({ name: f.name.slice(0, -3), fileId: f.id }));
+  }, [projectFiles]);
+
+  useEffect(() => {
+    pythonIntelliSenseContext.introspectModule = introspectModule;
+  }, [introspectModule]);
+
+  useEffect(() => {
+    pythonIntelliSenseContext.getLocalModuleSymbols = async (fileId: string) => {
+      try {
+        const file = await queryClient.fetchQuery({
+          queryKey: queryKeys.file(fileId),
+          queryFn: () => api.files.get(fileId),
+        });
+        return extractTopLevelSymbols(file.content ?? '');
+      } catch {
+        return [];
+      }
+    };
+  }, [queryClient]);
+
   const handleOpenShell = useCallback((): void => {
     setBottomTab('shell');
     void mountProjectFiles();
@@ -252,13 +317,13 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
         <button
           type="button"
-          onClick={onBack ?? (() => router.push('/dashboard'))}
+          onClick={onBack ?? (() => router.push('/dashboard/projects'))}
           className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          {mode === 'review' ? 'Back' : 'Projects'}
+          {backLabel ?? (mode === 'review' ? 'Back' : 'Projects')}
         </button>
         {mode === 'edit' && (
           <div className="w-48">
@@ -271,7 +336,7 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
               <button
                 type="button"
                 onClick={() => setShowPackages((v) => !v)}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
               >
                 Packages
               </button>
@@ -334,6 +399,7 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
                     readOnly={effectiveMode === 'review'}
                     fileId={activeTab.fileId}
                     canComment={mode === 'review'}
+                    viewerRole={session?.user?.role}
                   />
                 </div>
               </>
@@ -370,7 +436,13 @@ export function Workspace({ projectId, mode = 'edit', onBack, extraBar }: Worksp
                   workerErrorMessage={workerErrorMessage}
                 />
               ) : (
-                <PythonShell runRepl={runRepl} workerReady={workerStatus === 'ready'} mounted={shellMounted} />
+                <PythonShell
+                  projectId={projectId}
+                  runRepl={runRepl}
+                  installPackages={installPackages}
+                  workerReady={workerStatus === 'ready'}
+                  mounted={shellMounted}
+                />
               )}
             </div>
           </div>

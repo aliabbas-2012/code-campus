@@ -19,9 +19,20 @@ export interface ReplResult {
   returnCode: number;
 }
 
+export interface ModuleMember {
+  name: string;
+  kind: 'class' | 'function' | 'module' | 'value';
+  doc: string;
+}
+
 type WorkerStatus = 'initializing' | 'ready' | 'error';
 
-const DEFAULT_TIMEOUT_MS = 10_000;
+// Generous enough to cover a cold first-time download of a heavy package (pandas + its
+// transitive deps can be 10+ MB) alongside loadPackagesFromImports, not just code execution —
+// once loaded, Pyodide keeps packages in memory for the rest of the worker's lifetime, so this
+// cost is paid at most once per session per package.
+const DEFAULT_TIMEOUT_MS = 30_000;
+const INTROSPECT_TIMEOUT_MS = 5_000;
 
 export function usePythonWorker(): {
   status: WorkerStatus;
@@ -33,12 +44,17 @@ export function usePythonWorker(): {
   isInstalling: boolean;
   runRepl: (code: string) => Promise<ReplResult>;
   mountFiles: (files: Array<{ path: string; content: string }>) => Promise<void>;
+  listStdlibModules: () => Promise<string[]>;
+  introspectModule: (moduleName: string) => Promise<ModuleMember[]>;
 } {
   const workerRef = useRef<Worker | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const installResolverRef = useRef<((results: PackageInstallResult[]) => void) | null>(null);
   const replResolverRef = useRef<((result: ReplResult) => void) | null>(null);
   const mountResolverRef = useRef<(() => void) | null>(null);
+  const stdlibResolversRef = useRef<Array<(modules: string[]) => void>>([]);
+  const introspectResolversRef = useRef<Map<number, (members: ModuleMember[]) => void>>(new Map());
+  const nextRequestIdRef = useRef(0);
   const [status, setStatus] = useState<WorkerStatus>('initializing');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -70,6 +86,15 @@ export function usePythonWorker(): {
       } else if (type === 'files_mounted') {
         mountResolverRef.current?.();
         mountResolverRef.current = null;
+      } else if (type === 'stdlib_modules') {
+        const resolvers = stdlibResolversRef.current;
+        stdlibResolversRef.current = [];
+        for (const resolve of resolvers) resolve(data.modules as string[]);
+      } else if (type === 'introspect_result') {
+        const requestId = data.requestId as number;
+        const resolve = introspectResolversRef.current.get(requestId);
+        introspectResolversRef.current.delete(requestId);
+        resolve?.(data.members as ModuleMember[]);
       }
     };
 
@@ -158,5 +183,46 @@ export function usePythonWorker(): {
     [status],
   );
 
-  return { status, errorMessage, isRunning, output, run, installPackages, isInstalling, runRepl, mountFiles };
+  const listStdlibModules = useCallback((): Promise<string[]> => {
+    return new Promise((resolve) => {
+      if (status !== 'ready' || !workerRef.current) {
+        resolve([]);
+        return;
+      }
+      stdlibResolversRef.current.push(resolve);
+      workerRef.current.postMessage({ type: 'list_stdlib_modules', data: {} });
+    });
+  }, [status]);
+
+  const introspectModule = useCallback(
+    (moduleName: string): Promise<ModuleMember[]> => {
+      return new Promise((resolve) => {
+        if (status !== 'ready' || !workerRef.current) {
+          resolve([]);
+          return;
+        }
+        const requestId = nextRequestIdRef.current++;
+        introspectResolversRef.current.set(requestId, resolve);
+        setTimeout(() => {
+          if (introspectResolversRef.current.delete(requestId)) resolve([]);
+        }, INTROSPECT_TIMEOUT_MS);
+        workerRef.current.postMessage({ type: 'introspect_module', data: { requestId, module: moduleName } });
+      });
+    },
+    [status],
+  );
+
+  return {
+    status,
+    errorMessage,
+    isRunning,
+    output,
+    run,
+    installPackages,
+    isInstalling,
+    runRepl,
+    mountFiles,
+    listStdlibModules,
+    introspectModule,
+  };
 }

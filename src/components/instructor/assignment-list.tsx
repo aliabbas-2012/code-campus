@@ -21,11 +21,11 @@ export function AssignmentList(): React.ReactNode {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Assignments</h1>
         <button
           type="button"
           onClick={() => setShowCreate(true)}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
         >
           New Assignment
         </button>
@@ -41,7 +41,7 @@ export function AssignmentList(): React.ReactNode {
               key={a.id}
               type="button"
               onClick={() => router.push(`/instructor/assignments/${a.id}`)}
-              className="rounded-lg border border-gray-200 bg-white p-5 text-left shadow-sm hover:border-indigo-300"
+              className="rounded-xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
             >
               <h3 className="font-semibold text-gray-900">{a.title}</h3>
               <p className="mt-1 text-sm text-gray-500">

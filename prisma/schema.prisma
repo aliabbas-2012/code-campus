@@ -28,8 +28,16 @@ model User {
   submissions_graded     Submission[]        @relation("grading_instructor")
   submission_events      SubmissionEvent[]   @relation("submission_event_actor")
   line_comments_authored LineComment[]       @relation("line_comment_author")
+  line_comments_resolved LineComment[]       @relation("line_comment_resolver")
   notifications          Notification[]      @relation("notification_recipient")
   guidelines             Guidelines?         @relation("guidelines_owner")
+  reopen_requests_made     ReopenRequest[]   @relation("reopen_requested_by")
+  reopen_requests_resolved ReopenRequest[]   @relation("reopen_resolved_by")
+  instructor_profile     InstructorProfile?  @relation("instructor_profile_owner")
+  student_profile        StudentProfile?     @relation("student_profile_owner")
+
+  // The one admin account that can never be deleted and cannot be deleted by anyone else.
+  is_super_admin Boolean @default(false)
 
   last_active_at DateTime?
 
@@ -38,6 +46,31 @@ model User {
 
   @@index([email])
   @@index([role])
+}
+
+model InstructorProfile {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String   @unique @db.Uuid
+  user           User     @relation("instructor_profile_owner", fields: [user_id], references: [id], onDelete: Cascade)
+
+  title           String?
+  bio             String?
+  specializations String[] @default([])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model StudentProfile {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id   String   @unique @db.Uuid
+  user      User     @relation("student_profile_owner", fields: [user_id], references: [id], onDelete: Cascade)
+
+  bio       String?
+  interests String[] @default([])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 enum Role {
@@ -194,8 +227,13 @@ model Submission {
   graded_by_id String? @db.Uuid
   graded_by    User?   @relation("grading_instructor", fields: [graded_by_id], references: [id], onDelete: SetNull)
 
+  // True while a reopen request is pending admin decision — the student's own
+  // view of the grade/score is hidden until the admin resolves it.
+  on_hold Boolean @default(false)
+
   events SubmissionEvent[]
   line_comments LineComment[]
+  reopen_requests ReopenRequest[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -242,6 +280,11 @@ model LineComment {
   author_id String @db.Uuid
   author    User   @relation("line_comment_author", fields: [author_id], references: [id], onDelete: Cascade)
 
+  resolved      Boolean   @default(false)
+  resolved_by_id String?  @db.Uuid
+  resolved_by   User?     @relation("line_comment_resolver", fields: [resolved_by_id], references: [id], onDelete: SetNull)
+  resolved_at   DateTime?
+
   created_at DateTime @default(now())
 
   @@index([submission_id])
@@ -253,6 +296,7 @@ enum SubmissionEventType {
   REVISION_REQUESTED
   GRADED
   CANCELLED
+  REOPENED
 }
 
 model Notification {
@@ -279,6 +323,36 @@ enum NotificationType {
   REVISION_REQUESTED
   GRADED
   SUBMISSION_CANCELLED
+  REOPEN_REQUESTED
+  REOPEN_APPROVED
+  REOPEN_DECLINED
+}
+
+model ReopenRequest {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  submission_id String     @db.Uuid
+  submission    Submission @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+
+  requested_by_id String @db.Uuid
+  requested_by    User   @relation("reopen_requested_by", fields: [requested_by_id], references: [id], onDelete: Cascade)
+  reason          String?
+
+  status ReopenRequestStatus @default(PENDING)
+
+  resolved_by_id String?   @db.Uuid
+  resolved_by    User?     @relation("reopen_resolved_by", fields: [resolved_by_id], references: [id], onDelete: SetNull)
+  resolved_at    DateTime?
+
+  created_at DateTime @default(now())
+
+  @@index([submission_id])
+  @@index([status])
+}
+
+enum ReopenRequestStatus {
+  PENDING
+  APPROVED
+  DECLINED
 }
 
 model Guidelines {
