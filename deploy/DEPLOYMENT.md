@@ -183,36 +183,94 @@ plain HTTP (proxied to the Next.js process) — confirm before moving on to SSL.
 
 This is the step that actually generates the certificate — run it yourself,
 on the server, with the domain already resolving to it (per the DNS
-prerequisite at the top):
+prerequisite at the top) and Step 9's plain-HTTP vhost already working.
+
+### 10a. Generate it (the automatic, recommended way)
 
 ```bash
 sudo certbot --apache -d code-campus.countonrobert.com
 ```
 
-Certbot will:
-- prove domain ownership via an HTTP-01 challenge on port 80,
-- obtain the certificate from Let's Encrypt,
-- **edit `/etc/apache2/sites-available/code-campus.conf` itself**, adding a
-  `<VirtualHost *:443>` block with the cert paths and (if you accept the
-  prompt) a redirect from the `:80` block to `https://`,
-- install a systemd timer (`certbot.timer`) that auto-renews before the
-  90-day expiry — verify it's active:
+First run asks for an email (for renewal/expiry notices) and to agree to
+Let's Encrypt's terms. Then certbot will:
+
+1. Prove domain ownership via an **HTTP-01 challenge** — it briefly serves a
+   token file under `http://code-campus.countonrobert.com/.well-known/acme-challenge/`
+   using your existing `:80` vhost, and Let's Encrypt's servers fetch it.
+   This is the step that actually fails if DNS/firewall isn't right yet.
+2. On success, obtain the certificate and save it under
+   `/etc/letsencrypt/live/code-campus.countonrobert.com/` — the two files
+   that matter are `fullchain.pem` (cert + intermediate chain) and
+   `privkey.pem` (private key, mode 600, root-readable only).
+3. **Edit `/etc/apache2/sites-available/code-campus.conf` itself**, adding a
+   `<VirtualHost *:443>` block that points at those two files and proxies to
+   the app exactly like the `:80` block does. It will ask:
+   *"Please choose whether or not to redirect HTTP traffic to HTTPS"* — choose
+   **redirect** (option 2) so the site is only ever reachable over HTTPS.
+4. Reload Apache automatically with the new config.
+
+`deploy/apache/code-campus-ssl.conf.example` in this repo shows exactly what
+the resulting file looks like — open it side by side with the real
+`/etc/apache2/sites-available/code-campus.conf` after this step to sanity-check
+certbot's output, or as a reference if you ever need to reconstruct it by hand.
+
+Update `NEXTAUTH_URL` in `.env.local` to `https://code-campus.countonrobert.com`
+if you hadn't already in Step 5, and:
 
 ```bash
-systemctl status certbot.timer
-sudo certbot renew --dry-run     # confirm renewal works without waiting 90 days
+sudo systemctl restart code-campus
 ```
 
-Once this finishes, `https://code-campus.countonrobert.com` is live with a
-valid certificate — remember to also update `NEXTAUTH_URL` in `.env.local`
-to `https://` *before* this step if you hadn't already (Step 5), and restart
-the service (`sudo systemctl restart code-campus`) if you change it after.
+### 10b. Manual alternative (skip if 10a worked)
 
-## 11. Verify
+Only needed if you'd rather certbot not edit Apache's config for you — e.g.
+you want full control over the vhost. Obtain the cert without touching Apache:
+
+```bash
+sudo certbot certonly --webroot -w /var/www/html -d code-campus.countonrobert.com
+```
+
+(`/var/www/html` must be reachable via the existing `:80` vhost for the
+challenge — Apache's default document root works if you haven't changed it.)
+Then hand-edit `/etc/apache2/sites-available/code-campus.conf` to match
+`deploy/apache/code-campus-ssl.conf.example`, substituting your real domain,
+and reload: `sudo apache2ctl configtest && sudo systemctl reload apache2`.
+
+### 10c. Auto-renewal
+
+Let's Encrypt certificates expire every 90 days. Certbot installs a systemd
+timer that renews automatically well before that — confirm it's active and
+that a renewal would actually succeed, without waiting 90 days to find out:
+
+```bash
+systemctl status certbot.timer      # should be "active (waiting)"
+sudo certbot renew --dry-run        # simulates a real renewal end-to-end
+```
+
+If the dry run fails, fix it now — a real renewal failure means the site
+starts serving an expired cert (browsers will hard-block it) with no warning
+until it happens.
+
+### 10d. Verify
+
+```bash
+curl -I https://code-campus.countonrobert.com          # HTTP/2 200 (or 301 from :80 if you request that instead)
+curl -I http://code-campus.countonrobert.com            # should 301 to https:// if you chose "redirect" in 10a
+echo | openssl s_client -connect code-campus.countonrobert.com:443 -servername code-campus.countonrobert.com 2>/dev/null | openssl x509 -noout -dates
+```
+
+That last command prints the cert's `notBefore`/`notAfter` — confirm
+`notAfter` is ~90 days out and the domain matches. For a full external check
+(chain, protocol/cipher support, HSTS), point
+[SSL Labs' test](https://www.ssllabs.com/ssltest/) at the domain once it's
+live — not required, but worth doing once.
+
+## 11. Verify the app itself
 
 - Open `https://code-campus.countonrobert.com/login` in a browser — padlock
-  should show a valid cert, and the page should load fully (check devtools
-  console for any blocked-resource errors).
+  should show a valid cert (10d already checked this from the command line),
+  and the page should load fully (check devtools console for any
+  blocked-resource errors).
 - Log in with a seeded account (Step 7) or one you created by hand.
 - `sudo systemctl status code-campus apache2 postgresql` — all active.
 
@@ -248,7 +306,23 @@ Fix it and `sudo systemctl restart code-campus`.
 **Certbot fails the HTTP-01 challenge** — DNS hasn't propagated yet
 (`dig +short code-campus.countonrobert.com` should return this server's IP),
 or something on port 80 isn't actually reachable from the internet (cloud
-firewall/security group, not just `ufw`).
+firewall/security group, not just `ufw`). Check `sudo apache2ctl configtest`
+passes and `code-campus.conf` is actually enabled (`a2ensite`, Step 9) first —
+certbot needs the existing `:80` vhost serving that exact `ServerName` to
+place its challenge file.
+
+**Browser still shows "not secure" / mixed content after 10a** — a leftover
+browser tab cached the old HTTP page; hard-refresh. If specific resources
+(fonts, chunks) still load over `http://`, something is hardcoding an absolute
+`http://` URL rather than a relative one or `https://` — this app doesn't do
+that anywhere by default, so check for a stale `NEXTAUTH_URL` (Step 5) first.
+
+**Certbot says the domain already has a certificate / rate limited** — Let's
+Encrypt limits certs per exact domain to 5 per week. If you're re-running
+Step 10 repeatedly while testing, use
+`sudo certbot certonly --apache -d code-campus.countonrobert.com --dry-run`
+(against the staging CA, unlimited) to test the flow without burning a real
+issuance.
 
 **File uploads / zip import fail** — check the `storage/` directory (Step 7)
 exists under the app's working directory and is writable by the `codecampus`
@@ -274,3 +348,10 @@ user; also confirm `MAX_FILE_SIZE_MB` in `.env.local` is high enough.
 - [ ] A backup plan exists for the Postgres database (source of truth for all
       app data, including file contents — see `CLAUDE.md`'s architecture
       notes) — e.g. a nightly `pg_dump` cron job.
+- [ ] HTTP → HTTPS redirect is active (Step 10a's "redirect" choice, or the
+      `RewriteRule` in `code-campus-ssl.conf.example`) — confirmed via
+      `curl -I http://code-campus.countonrobert.com` returning a `301`.
+- [ ] `certbot renew --dry-run` (Step 10c) succeeds — a silent renewal
+      failure means the cert expires with no warning until browsers block it.
+- [ ] `certbot.timer` is enabled (`systemctl is-enabled certbot.timer`) so
+      renewal actually runs unattended going forward.

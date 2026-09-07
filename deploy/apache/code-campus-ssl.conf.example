@@ -1,0 +1,47 @@
+# Reference only — this is what certbot writes into
+# /etc/apache2/sites-available/code-campus.conf for you in Step 10 of
+# DEPLOYMENT.md (via `sudo certbot --apache -d code-campus.countonrobert.com`).
+# You don't need to create this by hand; it's here so you can see exactly
+# what to expect, sanity-check certbot's output against it, or reconstruct
+# it manually if you ever run `certbot certonly` instead of the --apache
+# plugin (e.g. on a box where you'd rather not let certbot edit vhosts).
+#
+# Paths below assume the cert was issued for exactly this one domain — if
+# you request a SAN cert for more names, certbot names the directory after
+# the first one but lists all of them inside cert.pem/fullchain.pem.
+
+<VirtualHost *:80>
+    ServerName code-campus.countonrobert.com
+
+    # certbot --apache adds this redirect automatically when asked ("yes,
+    # redirect" prompt during Step 10). Keeping plain HTTP proxy rules here
+    # instead (rather than redirecting) would defeat the point of the cert.
+    RewriteEngine on
+    RewriteCond %{SERVER_NAME} =code-campus.countonrobert.com
+    RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName code-campus.countonrobert.com
+
+    ProxyPreserveHost On
+    ProxyRequests Off
+    RequestHeader set X-Forwarded-Proto "https"
+
+    ProxyPass        / http://127.0.0.1:3007/
+    ProxyPassReverse / http://127.0.0.1:3007/
+
+    ErrorLog  ${APACHE_LOG_DIR}/code-campus-error.log
+    CustomLog ${APACHE_LOG_DIR}/code-campus-access.log combined
+
+    SSLEngine on
+    SSLCertificateFile      /etc/letsencrypt/live/code-campus.countonrobert.com/fullchain.pem
+    SSLCertificateKeyFile   /etc/letsencrypt/live/code-campus.countonrobert.com/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+
+    # Optional hardening (not added by certbot automatically) — tells
+    # browsers to always use HTTPS for this domain from now on. Only add
+    # this once you're confident HTTPS is working reliably: it's cached by
+    # the browser for a year (`max-age=31536000`) and hard to undo quickly.
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</VirtualHost>
