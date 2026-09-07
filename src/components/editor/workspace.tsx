@@ -78,7 +78,8 @@ export function Workspace({
   const [showPackages, setShowPackages] = useState(false);
   const [bottomTab, setBottomTab] = useState<'output' | 'shell'>('output');
   const [shellMounted, setShellMounted] = useState(false);
-  const shellMountingRef = useRef(false);
+  const mountedFingerprintRef = useRef<string | null>(null);
+  const mountInFlightRef = useRef<Promise<void> | null>(null);
   const autoInstalledRef = useRef(false);
   const autoOpenedRef = useRef(false);
 
@@ -169,10 +170,19 @@ export function Workspace({
     }
   }, [activeTab, updateTab, showToast]);
 
-  const mountProjectFiles = useCallback(async (): Promise<void> => {
-    if (shellMounted || shellMountingRef.current || workerStatus !== 'ready' || !projectFiles) return;
-    shellMountingRef.current = true;
-    try {
+  // Writes every project file into the Python worker's in-memory filesystem so code
+  // that opens a project file by path (pandas.read_csv, plain open(), etc.) can find
+  // it — not just the interactive shell. Fingerprinted on (id, updated_at) rather than
+  // a one-shot flag so a file created or edited after the first mount (e.g. a student
+  // adding a .csv mid-session) gets picked up automatically, without needing the shell
+  // tab to be reopened.
+  const mountProjectFiles = useCallback((): Promise<void> => {
+    if (workerStatus !== 'ready' || !projectFiles) return Promise.resolve();
+    const fingerprint = projectFiles.map((f) => `${f.id}:${f.updated_at}`).join('|');
+    if (fingerprint === mountedFingerprintRef.current) return Promise.resolve();
+    if (mountInFlightRef.current) return mountInFlightRef.current;
+
+    const promise = (async (): Promise<void> => {
       const byId = new Map(projectFiles.map((f) => [f.id, f]));
       const buildPath = (file: FileNode): string => {
         const parent = file.parent_id ? byId.get(file.parent_id) : undefined;
@@ -183,11 +193,16 @@ export function Workspace({
         files.map(async (f) => ({ path: buildPath(f), content: (await api.files.get(f.id)).content ?? '' })),
       );
       await mountFiles(contents);
+      mountedFingerprintRef.current = fingerprint;
       setShellMounted(true);
-    } finally {
-      shellMountingRef.current = false;
-    }
-  }, [shellMounted, workerStatus, projectFiles, mountFiles]);
+    })();
+
+    mountInFlightRef.current = promise;
+    void promise.finally(() => {
+      mountInFlightRef.current = null;
+    });
+    return promise;
+  }, [workerStatus, projectFiles, mountFiles]);
 
   // Keep the shared Python IntelliSense context fresh — the completion provider itself is
   // registered once for the whole app, but reads this object live on every keystroke, so
@@ -238,13 +253,12 @@ export function Workspace({
     void mountProjectFiles();
   }, [mountProjectFiles]);
 
-  // If the shell tab is open but the worker wasn't ready yet when it was first
-  // requested, mount as soon as it becomes ready instead of staying stuck.
+  // Keep the worker's filesystem in sync as soon as it's ready and whenever the
+  // project's file list changes — not gated to the shell tab, so a plain Run
+  // (e.g. pandas.read_csv on a file the student just created) can find it too.
   useEffect(() => {
-    if (bottomTab === 'shell') {
-      void mountProjectFiles();
-    }
-  }, [bottomTab, workerStatus, mountProjectFiles]);
+    void mountProjectFiles();
+  }, [workerStatus, projectFiles, mountProjectFiles]);
 
   // Auto-open the first file in the project once, so the editor isn't blank on load.
   useEffect(() => {
@@ -355,7 +369,10 @@ export function Workspace({
           <RunButton
             disabled={workerStatus !== 'ready' || isRunning || !activeTab}
             isRunning={isRunning}
-            onRun={() => activeTab && run(activeTab.content)}
+            onRun={() => {
+              if (!activeTab) return;
+              void mountProjectFiles().then(() => run(activeTab.content));
+            }}
           />
         </div>
       </div>
