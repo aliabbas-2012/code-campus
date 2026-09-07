@@ -140,6 +140,20 @@ export interface ChangePasswordInput {
   new_password: string;
 }
 
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ForgotPasswordResult {
+  message: string;
+  devResetLink?: string;
+}
+
+export interface ResetPasswordInput {
+  token: string;
+  new_password: string;
+}
+
 export interface StudentProfileData {
   bio: string | null;
   interests: string[];

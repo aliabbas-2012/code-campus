@@ -35,6 +35,7 @@ model User {
   reopen_requests_resolved ReopenRequest[]   @relation("reopen_resolved_by")
   instructor_profile     InstructorProfile?  @relation("instructor_profile_owner")
   student_profile        StudentProfile?     @relation("student_profile_owner")
+  password_reset_tokens  PasswordResetToken[]
 
   // The one admin account that can never be deleted and cannot be deleted by anyone else.
   is_super_admin Boolean @default(false)
@@ -377,4 +378,17 @@ model SmtpSettings {
   enabled    Boolean @default(false)
 
   updated_at DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String    @db.Uuid
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+
+  created_at DateTime @default(now())
+
+  @@index([user_id])
 }

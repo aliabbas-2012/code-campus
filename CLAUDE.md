@@ -70,6 +70,16 @@ assuming the package itself is broken.
   `instructor@example.com`, `student@example.com` — all with password
   `password`. There's no admin UI for user management yet, so this is
   currently the only way to get non-empty accounts into the database.
+- Opening the dev server from another device on your LAN (e.g.
+  `http://192.168.x.x:3007`) gets a 403 unless that host is listed in
+  `ALLOWED_DEV_ORIGINS` in `.env.local` — this is Next's dev-only
+  cross-origin protection (`allowedDevOrigins` in `next.config.js`), not an
+  app bug. Comma-separate multiple hostnames (no scheme/port).
+- Forgot-password emails go out via `emailService`, which silently no-ops
+  until SMTP is configured (Admin → SMTP Settings). Until then, set
+  `DEV_EXPOSE_RESET_LINK=true` in `.env.local` so
+  `POST /api/auth/forgot-password` returns the raw reset link in its JSON
+  response for local testing — never enable this in production.
 
 ## Architecture
 

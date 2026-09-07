@@ -44,6 +44,9 @@ import type {
   UpdateStudentProfileInput,
   PublicStudentProfile,
   ChangePasswordInput,
+  ForgotPasswordInput,
+  ForgotPasswordResult,
+  ResetPasswordInput,
 } from '@/types/api';
 
 export class ApiError extends Error {
@@ -253,5 +256,11 @@ export const api = {
   account: {
     changePassword: (input: ChangePasswordInput): Promise<{ success: true }> =>
       apiFetch('/api/account/password', { method: 'PUT', body: JSON.stringify(input) }),
+  },
+  auth: {
+    forgotPassword: (input: ForgotPasswordInput): Promise<ForgotPasswordResult> =>
+      apiFetch('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify(input) }),
+    resetPassword: (input: ResetPasswordInput): Promise<{ success: true }> =>
+      apiFetch('/api/auth/reset-password', { method: 'POST', body: JSON.stringify(input) }),
   },
 };

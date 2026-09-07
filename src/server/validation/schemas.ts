@@ -147,6 +147,15 @@ export const ChangePasswordSchema = z.object({
   new_password: z.string().min(8, 'New password must be at least 8 characters'),
 });
 
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+  new_password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
 export const SendTestSmtpEmailSchema = z.object({
   host: z.string().min(1, 'Host is required').max(255),
   port: z.number().int().positive().max(65535),
@@ -170,6 +179,8 @@ export type UpdateInstructorProfileInput = z.infer<typeof UpdateInstructorProfil
 export type UpdateStudentProfileInput = z.infer<typeof UpdateStudentProfileSchema>;
 export type SendTestSmtpEmailInput = z.infer<typeof SendTestSmtpEmailSchema>;
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type CreateFolderInput = z.infer<typeof CreateFolderSchema>;
 export type CreateUserInput = z.infer<typeof CreateUserSchema>;
 export type CreateInstructorStudentInput = z.infer<typeof CreateInstructorStudentSchema>;
