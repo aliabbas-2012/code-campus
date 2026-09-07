@@ -109,12 +109,23 @@ export function AssignmentFormDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
-      <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white dark:bg-gray-900 p-6 shadow-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">New Assignment</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white dark:bg-gray-900 p-6 shadow-lg">
+        <div className="flex items-start justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">New Assignment</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            aria-label="Close"
+            className="-mr-1 -mt-1 rounded-lg p-1.5 text-gray-400 dark:text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit(submit)} className="mt-4 space-y-4">
           <div>
@@ -138,7 +149,7 @@ export function AssignmentFormDialog({
                 name="description"
                 control={control}
                 render={({ field }) => (
-                  <RichTextEditor value={field.value} onChange={field.onChange} disabled={isSubmitting} />
+                  <RichTextEditor value={field.value} onChange={field.onChange} disabled={isSubmitting} minHeight={240} />
                 )}
               />
             </div>

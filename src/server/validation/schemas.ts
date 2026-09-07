@@ -13,12 +13,12 @@ export const SignupSchema = LoginSchema.extend({
 // Project schemas
 export const CreateProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required').max(255),
-  description: z.string().max(2000).optional(),
+  description: z.string().max(4000).optional(),
 });
 
 export const UpdateProjectSchema = z.object({
   name: z.string().min(1).max(255).optional(),
-  description: z.string().max(2000).optional(),
+  description: z.string().max(4000).optional(),
 });
 
 // File schemas
@@ -62,7 +62,7 @@ export const CreateInstructorStudentSchema = z.object({
 export const CreateAssignmentSchema = z
   .object({
     title: z.string().min(1, 'Title is required').max(255),
-    description: z.string().max(5000).optional(),
+    description: z.string().max(8000).optional(),
     max_score: z.number().int().positive().default(100),
     pass_threshold: z.number().int().nonnegative().default(60),
     student_ids: z.array(z.string().uuid()).min(1, 'Assign at least one student'),

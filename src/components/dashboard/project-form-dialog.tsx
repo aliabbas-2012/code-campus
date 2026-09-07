@@ -89,7 +89,7 @@ export function ProjectFormDialog({
                 name="description"
                 control={control}
                 render={({ field }) => (
-                  <RichTextEditor value={field.value} onChange={field.onChange} disabled={isSubmitting} />
+                  <RichTextEditor value={field.value} onChange={field.onChange} disabled={isSubmitting} minHeight={200} />
                 )}
               />
             </div>
