@@ -262,5 +262,7 @@ export const api = {
       apiFetch('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify(input) }),
     resetPassword: (input: ResetPasswordInput): Promise<{ success: true }> =>
       apiFetch('/api/auth/reset-password', { method: 'POST', body: JSON.stringify(input) }),
+    rememberMe: (remember: boolean): Promise<{ success: true }> =>
+      apiFetch('/api/auth/remember-me', { method: 'POST', body: JSON.stringify({ remember }) }),
   },
 };

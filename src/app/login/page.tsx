@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Logo } from '@/components/shared/logo';
+import { api } from '@/lib/api';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,6 +28,7 @@ function friendlyAuthError(message: string): string {
 export default function LoginPage(): React.ReactNode {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [error, setError] = useState('');
@@ -65,6 +67,12 @@ export default function LoginPage(): React.ReactNode {
       if (result?.error) {
         setError(friendlyAuthError(result.error));
       } else if (result?.ok) {
+        try {
+          await api.auth.rememberMe(rememberMe);
+        } catch {
+          // Best-effort — the session still works either way, just with whatever
+          // persistence NextAuth's default cookie settings happened to leave it at.
+        }
         // Explicitly prompt the browser's own password manager to offer saving
         // these credentials — since this is a fetch-driven login (no full page
         // navigation on submit), some browsers won't reliably detect it as a
@@ -174,6 +182,17 @@ export default function LoginPage(): React.ReactNode {
             </div>
             {fieldErrors.password && <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>}
           </div>
+
+          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={loading}
+              className="h-4 w-4 rounded border-gray-300 dark:border-gray-700 text-indigo-600 focus:ring-indigo-500"
+            />
+            Remember me on this device
+          </label>
 
           <button
             type="submit"

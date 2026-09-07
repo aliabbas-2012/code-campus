@@ -339,6 +339,9 @@ user; also confirm `MAX_FILE_SIZE_MB` in `.env.local` is high enough.
 - [ ] `DEV_EXPOSE_RESET_LINK` is unset in production `.env.local`.
 - [ ] `NEXTAUTH_SECRET` is a fresh value generated on this server, not copied
       from a dev machine.
+- [ ] `SESSION_INVALIDATION_KEY` is a fresh value too, and you know where to
+      change it (and to restart the service afterward) if you ever need to
+      force every session to log out at once — see `CLAUDE.md`.
 - [ ] Seeded demo accounts (Step 7) either skipped or their passwords changed
       immediately after first login.
 - [ ] Postgres password is strong and `pg_hba.conf` doesn't allow unrestricted

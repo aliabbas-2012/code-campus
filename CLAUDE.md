@@ -81,6 +81,37 @@ assuming the package itself is broken.
   `POST /api/auth/forgot-password` returns the raw reset link in its JSON
   response for local testing — never enable this in production.
 
+## Sessions: remember me, 15-minute re-validation, and the kill switch
+
+`src/lib/auth.ts`'s `session.maxAge` (30 days) is the *cryptographic* ceiling
+on a JWT's lifetime — it is not the same thing as how long the browser keeps
+the cookie around, which is controlled separately:
+
+- **Remember me**: `POST /api/auth/remember-me` (called by the login page
+  right after `signIn()` succeeds) re-sets the *same* session cookie with a
+  30-day `Max-Age` when the checkbox was checked, or with no `Max-Age` at all
+  (a real browser session cookie) when it wasn't — so an unchecked login is
+  gone the moment the browser fully closes, regardless of the JWT's own
+  30-day validity.
+- **15-minute re-validation**: instead of trusting a cached JWT for its full
+  lifetime, the `jwt` callback stamps an `accessTokenExpires` claim and, once
+  that elapses, re-checks the account against the database (still exists,
+  still `ACTIVE`) before letting the token keep working — a disabled/deleted
+  account is caught within 15 minutes instead of staying valid for weeks.
+  There's no real external token to refresh here (Credentials auth, not
+  OAuth), so this re-validation *is* the refresh.
+- **Kill switch**: `SESSION_INVALIDATION_KEY` in `.env.local` is stamped into
+  every token at issuance and compared against the live env value on every
+  check. Change it (any string) and restart the server to force *every*
+  already-issued session to log out on its next request — without touching
+  `NEXTAUTH_SECRET` (which also guards CSRF and other cryptographic state, so
+  rotating it is more disruptive than intended for "just log everyone out").
+  `SessionGuard` (`src/components/providers/session-provider.tsx`) is what
+  actually signs the client out when either check fails — it watches for
+  `session.error === 'SessionInvalidated'` client-side, while
+  `getAuthContext()` rejects it server-side the same way it rejects any
+  missing session.
+
 ## Architecture
 
 - `/server` has zero Next.js imports by design — it's the extraction
