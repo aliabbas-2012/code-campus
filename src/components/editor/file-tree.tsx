@@ -127,7 +127,7 @@ export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps
   const rootNodes = childrenOf.get(null) ?? [];
 
   if (isLoading) {
-    return <div className="p-3 text-sm text-gray-400">Loading files…</div>;
+    return <div className="p-3 text-sm text-gray-400 dark:text-gray-500">Loading files…</div>;
   }
 
   if (isError) {
@@ -156,18 +156,18 @@ export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps
     >
       <div className="flex h-full flex-col">
         {mode === 'edit' && (
-          <div className="flex items-center gap-1 border-b border-gray-200 px-2 py-1.5">
+          <div className="flex items-center gap-1 border-b border-gray-200 dark:border-gray-800 px-2 py-1.5">
             <button
               type="button"
               onClick={() => startCreate('file')}
-              className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+              className="rounded px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               + File
             </button>
             <button
               type="button"
               onClick={() => startCreate('folder')}
-              className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+              className="rounded px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               + Folder
             </button>
@@ -176,7 +176,7 @@ export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps
               onClick={() => importInputRef.current?.click()}
               disabled={importFiles.isPending}
               title="Import a .zip archive or a single .py file"
-              className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+              className="rounded px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
             >
               {importFiles.isPending ? 'Importing…' : 'Import'}
             </button>
@@ -205,7 +205,7 @@ export function FileTree({ projectId, onOpenFile, mode = 'edit' }: FileTreeProps
             </div>
           )}
           {rootNodes.length === 0 && !creating && (
-            <p className="px-3 py-4 text-xs text-gray-400">No files yet.</p>
+            <p className="px-3 py-4 text-xs text-gray-400 dark:text-gray-500">No files yet.</p>
           )}
         </div>
       </div>

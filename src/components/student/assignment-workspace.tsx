@@ -9,7 +9,7 @@ export function AssignmentWorkspace({ assignmentId }: { assignmentId: string }):
   const { data: assignment, isLoading, isError } = useStudentAssignment(assignmentId);
 
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center text-sm text-gray-400">Loading…</div>;
+    return <div className="flex h-screen items-center justify-center text-sm text-gray-400 dark:text-gray-500">Loading…</div>;
   }
 
   if (isError || !assignment || !assignment.project_id) {

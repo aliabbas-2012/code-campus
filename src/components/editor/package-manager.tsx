@@ -105,9 +105,9 @@ export function PackageManager({ projectId, installPackages, isInstalling, worke
   };
 
   return (
-    <div className="w-80 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
-      <p className="text-xs font-semibold uppercase text-gray-500">Install packages</p>
-      <p className="mt-1 text-xs text-gray-400">
+    <div className="w-80 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 shadow-lg">
+      <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Install packages</p>
+      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
         Pick a recommended library or type any package name. Successful installs are saved to requirements.txt.
       </p>
       <div className="mt-2">
@@ -135,7 +135,7 @@ export function PackageManager({ projectId, installPackages, isInstalling, worke
             <li key={r.package} className="text-xs">
               <span className={r.success ? 'text-emerald-600' : 'text-red-600'}>{r.success ? '✓' : '✗'}</span>{' '}
               <span className="font-mono">{r.package}</span>
-              {!r.success && r.error && <span className="ml-1 text-gray-400">— {r.error.slice(0, 80)}</span>}
+              {!r.success && r.error && <span className="ml-1 text-gray-400 dark:text-gray-500">— {r.error.slice(0, 80)}</span>}
             </li>
           ))}
         </ul>
@@ -144,7 +144,7 @@ export function PackageManager({ projectId, installPackages, isInstalling, worke
       {requirementsPackages.length > 0 && (
         <div className="mt-3 border-t border-gray-100 pt-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase text-gray-500">From requirements.txt</p>
+            <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">From requirements.txt</p>
             <button
               type="button"
               onClick={handleInstallAllFromRequirements}
@@ -160,14 +160,14 @@ export function PackageManager({ projectId, installPackages, isInstalling, worke
               return (
                 <li key={pkg} className="flex items-center justify-between gap-2 text-xs">
                   <span className="flex min-w-0 items-center gap-1">
-                    {result && <span className={result.success ? 'text-emerald-600' : 'text-red-600'}>{result.success ? '✓' : '✗'}</span>}
-                    <span className="truncate font-mono text-gray-700">{pkg}</span>
+                    {result && <span className={result.success ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>{result.success ? '✓' : '✗'}</span>}
+                    <span className="truncate font-mono text-gray-700 dark:text-gray-300">{pkg}</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => handleInstallOne(pkg)}
                     disabled={!workerReady || installingPackage !== null}
-                    className="shrink-0 rounded border border-gray-300 px-2 py-0.5 font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                    className="shrink-0 rounded border border-gray-300 dark:border-gray-700 px-2 py-0.5 font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
                   >
                     {installingPackage === pkg ? 'Installing…' : result ? 'Re-verify' : 'Install & verify'}
                   </button>

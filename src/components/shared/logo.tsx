@@ -35,7 +35,7 @@ export function Logo({ label = 'Code Campus', className = '', size = 'md' }: Log
           </linearGradient>
         </defs>
       </svg>
-      <span className={`${text} font-semibold tracking-tight text-gray-900`}>{label}</span>
+      <span className={`${text} font-semibold tracking-tight text-gray-900 dark:text-gray-100`}>{label}</span>
     </span>
   );
 }

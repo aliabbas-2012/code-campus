@@ -33,7 +33,7 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
       .map((link) => ({ id: link.student.id, label: link.student.name, sublabel: link.student.email }));
   }, [roster, assignment]);
 
-  if (isLoading) return <p className="text-sm text-gray-400">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-gray-400 dark:text-gray-500">Loading…</p>;
   if (isError || !assignment) return <p className="text-sm text-red-600">Failed to load assignment.</p>;
 
   const handleAdd = (): void => {
@@ -51,20 +51,20 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">{assignment.title}</h1>
-      <p className="mt-2 text-sm text-gray-500">
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{assignment.title}</h1>
+      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
         Pass at {assignment.pass_threshold}/{assignment.max_score}
       </p>
 
       {assignment.description && (
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Description</h2>
-          <RichTextContent html={assignment.description} className="mt-3 max-w-2xl text-gray-600" />
+        <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Description</h2>
+          <RichTextContent html={assignment.description} className="mt-3 max-w-2xl text-gray-600 dark:text-gray-400" />
         </div>
       )}
 
       <div className="mt-8 flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold tracking-tight text-gray-900">Students</h2>
+        <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">Students</h2>
         <button
           type="button"
           onClick={() => setShowAdd((v) => !v)}
@@ -75,7 +75,7 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
       </div>
 
       {showAdd && (
-        <div className="mt-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="mt-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
           <MultiSelect
             options={availableOptions}
             selected={selected}
@@ -93,9 +93,9 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
         </div>
       )}
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-gray-200 bg-gray-50/60 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <thead className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/60 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 dark:bg-gray-800/60">
             <tr>
               <th className="px-4 py-3">Student</th>
               <th className="px-4 py-3">Status</th>
@@ -103,14 +103,14 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
               <th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {assignment.students.map(({ student, submission }) => (
               <tr key={student.id}>
-                <td className="px-4 py-3 font-medium text-gray-900">{student.name}</td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{student.name}</td>
+                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   {submission ? STATUS_LABELS[submission.status] : STATUS_LABELS.IN_PROGRESS}
                 </td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   {submission?.score !== null && submission?.score !== undefined ? (
                     <span className="flex items-center gap-1.5">
                       {submission.score}/{assignment.max_score}

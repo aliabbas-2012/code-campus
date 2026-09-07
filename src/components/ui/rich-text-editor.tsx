@@ -33,7 +33,7 @@ function ToolbarButton({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={`rounded px-2 py-1 text-sm font-medium ${
-        active ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'
+        active ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'
       } disabled:opacity-40`}
     >
       {children}
@@ -62,8 +62,8 @@ export function RichTextEditor({ value, onChange, disabled, placeholder }: RichT
   }, [value, editor]);
 
   return (
-    <div className="rounded-lg border border-gray-300 focus-within:border-transparent focus-within:ring-2 focus-within:ring-indigo-500">
-      <div className="flex gap-0.5 border-b border-gray-200 px-1.5 py-1">
+    <div className="rounded-lg border border-gray-300 dark:border-gray-700 focus-within:border-transparent focus-within:ring-2 focus-within:ring-indigo-500">
+      <div className="flex gap-0.5 border-b border-gray-200 dark:border-gray-800 px-1.5 py-1">
         <ToolbarButton
           label="Bold"
           active={editor?.isActive('bold')}

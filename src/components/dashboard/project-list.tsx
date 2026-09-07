@@ -44,7 +44,7 @@ export function ProjectList(): React.ReactNode {
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Your Projects</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Your Projects</h1>
           <div className="mt-2">
             <StorageQuotaBar />
           </div>
@@ -76,8 +76,8 @@ export function ProjectList(): React.ReactNode {
       )}
 
       {!isLoading && !isError && projects && projects.length === 0 && (
-        <div className="rounded-lg border border-dashed border-gray-300 py-16 text-center">
-          <p className="text-gray-600">No projects yet — create your first one to start coding.</p>
+        <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 py-16 text-center">
+          <p className="text-gray-600 dark:text-gray-400">No projects yet — create your first one to start coding.</p>
           <button
             type="button"
             onClick={() => setShowCreate(true)}

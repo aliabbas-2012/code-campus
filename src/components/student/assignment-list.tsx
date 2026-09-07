@@ -23,9 +23,9 @@ export function AssignmentList(): React.ReactNode {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">Assignments</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Assignments</h1>
 
-      {isLoading && <p className="mt-4 text-sm text-gray-400">Loading…</p>}
+      {isLoading && <p className="mt-4 text-sm text-gray-400 dark:text-gray-500">Loading…</p>}
       {isError && <p className="mt-4 text-sm text-red-600">Failed to load assignments.</p>}
 
       {!isLoading && !isError && (
@@ -37,20 +37,20 @@ export function AssignmentList(): React.ReactNode {
                 key={a.id}
                 type="button"
                 onClick={() => router.push(`/dashboard/assignments/${a.id}`)}
-                className="rounded-xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+                className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-gray-900">{a.title}</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">{a.title}</h3>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[status]}`}>
                     {STATUS_LABELS[status]}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-gray-500">From {a.instructor.name}</p>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">From {a.instructor.name}</p>
               </button>
             );
           })}
           {assignments?.length === 0 && (
-            <p className="text-sm text-gray-400">No assignments yet.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">No assignments yet.</p>
           )}
         </div>
       )}

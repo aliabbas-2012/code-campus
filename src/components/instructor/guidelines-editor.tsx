@@ -25,12 +25,12 @@ export function GuidelinesEditor(): React.ReactNode {
     });
   };
 
-  if (isLoading) return <p className="text-sm text-gray-400">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-gray-400 dark:text-gray-500">Loading…</p>;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">Guidelines</h1>
-      <p className="mt-1 text-sm text-gray-500">
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Guidelines</h1>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Shown to every student on your roster. Use it for grading criteria, submission expectations, or house rules.
       </p>
       <div className="mt-4">

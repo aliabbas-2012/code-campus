@@ -9,10 +9,10 @@ import { PassFailBadge } from '@/components/shared/pass-fail-badge';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 const STATUS_STYLES: Record<string, string> = {
-  IN_PROGRESS: 'bg-gray-100 text-gray-700',
-  SUBMITTED: 'bg-blue-100 text-blue-700',
-  REVISION_REQUESTED: 'bg-amber-100 text-amber-800',
-  GRADED: 'bg-emerald-100 text-emerald-800',
+  IN_PROGRESS: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  SUBMITTED: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
+  REVISION_REQUESTED: 'bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400',
+  GRADED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -59,24 +59,24 @@ export function SubmissionBar({ projectId }: { projectId: string }): React.React
   };
 
   return (
-    <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
+    <div className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 px-4 py-2">
       <div className="flex items-center gap-3">
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[submission.status]}`}>
           {STATUS_LABELS[submission.status]}
         </span>
         {submission.status === 'GRADED' && (
-          <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
             {submission.score}/{submission.assignment.max_score}
             <PassFailBadge passed={submission.passed} />
           </span>
         )}
         {submission.status === 'SUBMITTED' && (
-          <span className="text-xs text-gray-500">Your files are locked while this is awaiting review.</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">Your files are locked while this is awaiting review.</span>
         )}
         <button
           type="button"
           onClick={() => setShowTimeline((v) => !v)}
-          className="text-xs font-medium text-gray-500 underline hover:text-gray-700"
+          className="text-xs font-medium text-gray-500 dark:text-gray-400 underline hover:text-gray-700 dark:hover:text-gray-200"
         >
           {showTimeline ? 'Hide history' : 'Show history'}
         </button>
@@ -86,7 +86,7 @@ export function SubmissionBar({ projectId }: { projectId: string }): React.React
               type="button"
               onClick={handleCancel}
               disabled={action.isPending}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-100 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
             >
               Cancel Review Request
             </button>
@@ -104,8 +104,8 @@ export function SubmissionBar({ projectId }: { projectId: string }): React.React
       </div>
 
       {canSubmit && showRemarks && (
-        <div className="mt-3 rounded-lg border border-gray-200 bg-white p-3">
-          <p className="text-xs font-semibold uppercase text-gray-500">Remarks for your instructor (optional)</p>
+        <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
+          <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Remarks for your instructor (optional)</p>
           <div className="mt-1">
             <RichTextEditor value={remarks} onChange={setRemarks} placeholder="Explain your approach, note anything you're unsure about, add code snippets…" />
           </div>
@@ -113,7 +113,7 @@ export function SubmissionBar({ projectId }: { projectId: string }): React.React
             <button
               type="button"
               onClick={() => setShowRemarks(false)}
-              className="rounded-lg px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+              className="rounded-lg px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>

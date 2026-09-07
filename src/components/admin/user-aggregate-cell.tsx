@@ -16,14 +16,14 @@ export function UserAggregateCell({ userId, role }: { userId: string; role: User
 
   if (role === 'INSTRUCTOR') {
     return (
-      <span ref={ref} className="text-xs text-gray-500">
+      <span ref={ref} className="text-xs text-gray-500 dark:text-gray-400">
         {data.studentCount ?? 0} students · {data.assignmentCount ?? 0} assignments
       </span>
     );
   }
 
   return (
-    <span ref={ref} className="text-xs text-gray-500">
+    <span ref={ref} className="text-xs text-gray-500 dark:text-gray-400">
       {data.assignmentCount ?? 0} assignments
     </span>
   );

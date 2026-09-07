@@ -15,7 +15,7 @@ export function StudentAggregateCell({ studentId }: { studentId: string }): Reac
   }
 
   return (
-    <span ref={ref} className="text-xs text-gray-500">
+    <span ref={ref} className="text-xs text-gray-500 dark:text-gray-400">
       {stats.total} assignment{stats.total === 1 ? '' : 's'} · {stats.passed} passed · {stats.failed} failed
     </span>
   );

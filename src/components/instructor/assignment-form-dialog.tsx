@@ -111,27 +111,27 @@ export function AssignmentFormDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white dark:bg-gray-900 p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-gray-900">New Assignment</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">New Assignment</h2>
 
         <form onSubmit={handleSubmit(submit)} className="mt-4 space-y-4">
           <div>
-            <label htmlFor="assignment-title" className="block text-sm font-medium text-gray-700">Title</label>
+            <label htmlFor="assignment-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
             <input
               id="assignment-title"
               autoFocus
               {...register('title', { required: 'Title is required', maxLength: 255 })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
               disabled={isSubmitting}
             />
             {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>}
           </div>
 
           <div>
-            <p className="block text-sm font-medium text-gray-700">
-              Description <span className="text-gray-400">(optional)</span>
+            <p className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Description <span className="text-gray-400 dark:text-gray-500">(optional)</span>
             </p>
             <div className="mt-1">
               <Controller
@@ -146,31 +146,31 @@ export function AssignmentFormDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="max-score" className="block text-sm font-medium text-gray-700">Max score</label>
+              <label htmlFor="max-score" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Max score</label>
               <input
                 id="max-score"
                 type="number"
                 {...register('max_score', { required: true, valueAsNumber: true, min: 1 })}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
                 disabled={isSubmitting}
               />
             </div>
             <div>
-              <label htmlFor="pass-threshold" className="block text-sm font-medium text-gray-700">Pass threshold</label>
+              <label htmlFor="pass-threshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Pass threshold</label>
               <input
                 id="pass-threshold"
                 type="number"
                 {...register('pass_threshold', { required: true, valueAsNumber: true, min: 0 })}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
                 disabled={isSubmitting}
               />
             </div>
           </div>
 
           <div>
-            <p className="block text-sm font-medium text-gray-700">Assign to</p>
+            <p className="block text-sm font-medium text-gray-700 dark:text-gray-300">Assign to</p>
             {fixedStudent ? (
-              <p className="mt-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+              <p className="mt-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
                 {fixedStudent.name}
               </p>
             ) : (
@@ -185,17 +185,17 @@ export function AssignmentFormDialog({
                   />
                 </div>
                 {studentIds.length === 0 && (
-                  <p className="mt-1 text-sm text-gray-400">Select at least one student.</p>
+                  <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">Select at least one student.</p>
                 )}
               </>
             )}
           </div>
 
           <div>
-            <p className="block text-sm font-medium text-gray-700">
-              Starter code <span className="text-gray-400">(optional)</span>
+            <p className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Starter code <span className="text-gray-400 dark:text-gray-500">(optional)</span>
             </p>
-            <p className="mt-0.5 text-xs text-gray-400">
+            <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
               Import a .py file to seed as solution.py in every student&apos;s project.
             </p>
             <input
@@ -210,20 +210,20 @@ export function AssignmentFormDialog({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isSubmitting}
-                className="mt-1 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                className="mt-1 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
               >
                 Import .py file…
               </button>
             ) : (
-              <div className="mt-1 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5">
-                <span className="truncate text-sm text-gray-700">
+              <div className="mt-1 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 px-3 py-1.5">
+                <span className="truncate text-sm text-gray-700 dark:text-gray-300">
                   {starterFileName} · {starterCode.split('\n').length} lines
                 </span>
                 <button
                   type="button"
                   onClick={handleRemoveStarterFile}
                   disabled={isSubmitting}
-                  className="ml-2 shrink-0 text-xs font-medium text-gray-500 hover:text-red-600"
+                  className="ml-2 shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-red-600"
                 >
                   Remove
                 </button>
@@ -239,7 +239,7 @@ export function AssignmentFormDialog({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>

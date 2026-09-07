@@ -44,14 +44,14 @@ export function SingleSelect({ options, value, onChange, placeholder = 'Searchâ€
   return (
     <div className="relative max-w-sm">
       <div
-        className="flex min-h-[42px] items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-indigo-500"
+        className="flex min-h-[42px] items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-indigo-500"
         onClick={() => inputRef.current?.focus()}
       >
         {selectedOption && !open ? (
           <span className="flex flex-1 items-center justify-between text-sm">
-            <span className="text-gray-900">
+            <span className="text-gray-900 dark:text-gray-100">
               {selectedOption.label}
-              {selectedOption.sublabel && <span className="ml-1 text-gray-400">({selectedOption.sublabel})</span>}
+              {selectedOption.sublabel && <span className="ml-1 text-gray-400 dark:text-gray-500">({selectedOption.sublabel})</span>}
             </span>
             <button
               type="button"
@@ -60,7 +60,7 @@ export function SingleSelect({ options, value, onChange, placeholder = 'Searchâ€
                 clear();
               }}
               aria-label="Clear selection"
-              className="text-gray-400 hover:text-gray-700"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-700"
             >
               Ã—
             </button>
@@ -79,7 +79,7 @@ export function SingleSelect({ options, value, onChange, placeholder = 'Searchâ€
       </div>
 
       {open && filtered.length > 0 && (
-        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1 shadow-lg dark:border-gray-700">
           {filtered.map((opt) => (
             <li key={opt.id}>
               <button
@@ -88,8 +88,8 @@ export function SingleSelect({ options, value, onChange, placeholder = 'Searchâ€
                 onClick={() => select(opt.id)}
                 className={`flex w-full flex-col px-3 py-1.5 text-left text-sm hover:bg-indigo-50 ${opt.id === value ? 'bg-indigo-50' : ''}`}
               >
-                <span className="text-gray-900">{opt.label}</span>
-                {opt.sublabel && <span className="text-xs text-gray-400">{opt.sublabel}</span>}
+                <span className="text-gray-900 dark:text-gray-100">{opt.label}</span>
+                {opt.sublabel && <span className="text-xs text-gray-400 dark:text-gray-500">{opt.sublabel}</span>}
               </button>
             </li>
           ))}

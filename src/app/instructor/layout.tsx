@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { NotificationBell } from '@/components/shared/notification-bell';
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { UserMenu } from '@/components/shared/user-menu';
 import { Logo } from '@/components/shared/logo';
 import { usePresenceHeartbeat } from '@/hooks/use-presence';
@@ -40,8 +41,8 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
             <Link href="/instructor/dashboard">
@@ -54,8 +55,8 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
                   href={item.href}
                   className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                     pathname.startsWith(item.href)
-                      ? 'bg-indigo-50 font-semibold text-indigo-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-indigo-50 font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400'
+                      : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
                   }`}
                 >
                   {item.label}
@@ -64,6 +65,7 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <NotificationBell />
             <UserMenu
               name={session.user.name ?? ''}
@@ -73,15 +75,15 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
             />
           </div>
         </div>
-        <nav className="flex gap-1 overflow-x-auto border-t border-gray-100 px-4 py-2 sm:px-6 md:hidden">
+        <nav className="flex gap-1 overflow-x-auto border-t border-gray-100 px-4 py-2 dark:border-gray-800 sm:px-6 md:hidden">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                 pathname.startsWith(item.href)
-                  ? 'bg-indigo-50 font-semibold text-indigo-700'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-indigo-50 font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400'
+                  : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
               }`}
             >
               {item.label}

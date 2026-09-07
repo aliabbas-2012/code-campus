@@ -48,17 +48,17 @@ export function SmtpSettingsForm(): React.ReactNode {
     });
   };
 
-  if (isLoading) return <p className="text-sm text-gray-400">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-gray-400 dark:text-gray-500">Loading…</p>;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">SMTP Settings</h1>
-      <p className="mt-1 text-sm text-gray-500">
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">SMTP Settings</h1>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
         When a user is offline, notifications (submissions, revisions, grades) are emailed to them using these settings.
       </p>
 
-      <div className="mt-4 max-w-lg space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+      <div className="mt-4 max-w-lg space-y-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
           <input
             type="checkbox"
             checked={form.enabled}
@@ -68,28 +68,28 @@ export function SmtpSettingsForm(): React.ReactNode {
         </label>
 
         <div>
-          <label htmlFor="smtp-host" className="block text-sm font-medium text-gray-700">Host</label>
+          <label htmlFor="smtp-host" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Host</label>
           <input
             id="smtp-host"
             value={form.host}
             onChange={(e) => setForm((f) => ({ ...f, host: e.target.value }))}
             placeholder="smtp.example.com"
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="smtp-port" className="block text-sm font-medium text-gray-700">Port</label>
+            <label htmlFor="smtp-port" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Port</label>
             <input
               id="smtp-port"
               type="number"
               value={form.port}
               onChange={(e) => setForm((f) => ({ ...f, port: Number(e.target.value) }))}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
             />
           </div>
-          <label className="mt-6 flex items-center gap-2 text-sm font-medium text-gray-700">
+          <label className="mt-6 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
             <input
               type="checkbox"
               checked={form.secure}
@@ -100,29 +100,29 @@ export function SmtpSettingsForm(): React.ReactNode {
         </div>
 
         <div>
-          <label htmlFor="smtp-username" className="block text-sm font-medium text-gray-700">Username</label>
+          <label htmlFor="smtp-username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
           <input
             id="smtp-username"
             value={form.username ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 
         <div>
-          <label htmlFor="smtp-password" className="block text-sm font-medium text-gray-700">Password</label>
+          <label htmlFor="smtp-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
           <div className="mt-1 flex gap-2">
             <input
               id="smtp-password"
               type={showPassword ? 'text' : 'password'}
               value={form.password ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="shrink-0 rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               {showPassword ? 'Hide' : 'Show'}
             </button>
@@ -130,24 +130,24 @@ export function SmtpSettingsForm(): React.ReactNode {
         </div>
 
         <div>
-          <label htmlFor="smtp-from-email" className="block text-sm font-medium text-gray-700">From email</label>
+          <label htmlFor="smtp-from-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">From email</label>
           <input
             id="smtp-from-email"
             type="email"
             value={form.from_email}
             onChange={(e) => setForm((f) => ({ ...f, from_email: e.target.value }))}
             placeholder="noreply@example.com"
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 
         <div>
-          <label htmlFor="smtp-from-name" className="block text-sm font-medium text-gray-700">From name</label>
+          <label htmlFor="smtp-from-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">From name</label>
           <input
             id="smtp-from-name"
             value={form.from_name}
             onChange={(e) => setForm((f) => ({ ...f, from_name: e.target.value }))}
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
           />
         </div>
 
@@ -164,7 +164,7 @@ export function SmtpSettingsForm(): React.ReactNode {
             type="button"
             onClick={handleTest}
             disabled={test.isPending || !form.host || !form.from_email}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
           >
             {test.isPending ? 'Sending…' : 'Send Test Email'}
           </button>

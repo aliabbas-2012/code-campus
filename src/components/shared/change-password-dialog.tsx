@@ -50,14 +50,14 @@ export function ChangePasswordDialog({ onClose }: { onClose: () => void }): Reac
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
+        className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-lg bg-white dark:bg-gray-900 p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-gray-900">Change Password</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Change Password</h2>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
-            <label htmlFor="current-password" className="block text-sm font-medium text-gray-700">Current password</label>
+            <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Current password</label>
             <input
               id="current-password"
               type="password"
@@ -65,12 +65,12 @@ export function ChangePasswordDialog({ onClose }: { onClose: () => void }): Reac
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
             />
           </div>
 
           <div>
-            <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">New password</label>
+            <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">New password</label>
             <input
               id="new-password"
               type="password"
@@ -78,12 +78,12 @@ export function ChangePasswordDialog({ onClose }: { onClose: () => void }): Reac
               onChange={(e) => setNewPassword(e.target.value)}
               required
               minLength={8}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
             />
           </div>
 
           <div>
-            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">Confirm new password</label>
+            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm new password</label>
             <input
               id="confirm-password"
               type="password"
@@ -91,7 +91,7 @@ export function ChangePasswordDialog({ onClose }: { onClose: () => void }): Reac
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={8}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -102,7 +102,7 @@ export function ChangePasswordDialog({ onClose }: { onClose: () => void }): Reac
               type="button"
               onClick={onClose}
               disabled={changePassword.isPending}
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>

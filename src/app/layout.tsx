@@ -15,8 +15,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }): React.ReactNode {
   return (
-    <html lang="en">
-      <body className="antialiased bg-white dark:bg-slate-950">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Applies the stored theme before first paint so there's no flash of the
+            wrong theme — must stay in sync with readStoredTheme() in useTheme(). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('code-campus-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="antialiased bg-background text-foreground">
         <AuthSessionProvider>
           <QueryProvider>
             <ToastProvider>{children}</ToastProvider>

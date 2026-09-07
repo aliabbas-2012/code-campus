@@ -36,7 +36,7 @@ export function TagInput({ tags, onChange, placeholder = 'Type and press Enterâ€
   };
 
   return (
-    <div className="flex min-h-[42px] flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-indigo-500">
+    <div className="flex min-h-[42px] flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-indigo-500">
       {tags.map((tag) => (
         <span key={tag} className="flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-sm text-indigo-700">
           {tag}

@@ -33,25 +33,25 @@ export function UserMenu({ name, email, role, profileHref }: UserMenuProps): Rea
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-lg px-2 py-1 text-sm hover:bg-gray-100"
+        className="flex items-center gap-2 rounded-lg px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
       >
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
           {initial}
         </span>
         <span className="flex flex-col items-start leading-tight">
-          <span className="font-medium text-gray-900">{name}</span>
-          <span className="text-[11px] text-gray-500">{ROLE_LABELS[role] ?? role}</span>
+          <span className="font-medium text-gray-900 dark:text-gray-100">{name}</span>
+          <span className="text-[11px] text-gray-500 dark:text-gray-400">{ROLE_LABELS[role] ?? role}</span>
         </span>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500">
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1 shadow-lg dark:border-gray-700">
           <div className="border-b border-gray-100 px-3 py-2">
-            <p className="text-sm font-medium text-gray-900">{name}</p>
-            <p className="truncate text-xs text-gray-500">{email}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{name}</p>
+            <p className="truncate text-xs text-gray-500 dark:text-gray-400">{email}</p>
             <span className="mt-1 inline-block rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
               {ROLE_LABELS[role] ?? role}
             </span>
@@ -63,7 +63,7 @@ export function UserMenu({ name, email, role, profileHref }: UserMenuProps): Rea
                 setOpen(false);
                 router.push(profileHref);
               }}
-              className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+              className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               My Profile
             </button>
@@ -74,7 +74,7 @@ export function UserMenu({ name, email, role, profileHref }: UserMenuProps): Rea
               setOpen(false);
               setShowChangePassword(true);
             }}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             Change Password
           </button>
@@ -82,7 +82,7 @@ export function UserMenu({ name, email, role, profileHref }: UserMenuProps): Rea
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             Sign out
           </button>

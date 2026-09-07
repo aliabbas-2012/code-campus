@@ -16,10 +16,10 @@ export function ProjectCard({ project, onRename, onDelete }: ProjectCardProps): 
   return (
     <div
       onClick={() => router.push(`/projects/${project.id}`)}
-      className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+      className="group cursor-pointer rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
     >
       <div className="flex items-start justify-between">
-        <h3 className="font-semibold text-gray-900">{project.name}</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{project.name}</h3>
         <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             type="button"
@@ -28,7 +28,7 @@ export function ProjectCard({ project, onRename, onDelete }: ProjectCardProps): 
               onRename();
             }}
             aria-label="Rename project"
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            className="rounded p-1 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -42,7 +42,7 @@ export function ProjectCard({ project, onRename, onDelete }: ProjectCardProps): 
               onDelete();
             }}
             aria-label="Delete project"
-            className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+            className="rounded p-1 text-gray-400 dark:text-gray-500 hover:bg-red-50 hover:text-red-600"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <polyline points="3 6 5 6 21 6" />
@@ -52,9 +52,9 @@ export function ProjectCard({ project, onRename, onDelete }: ProjectCardProps): 
         </div>
       </div>
       {project.description ? (
-        <RichTextContent html={project.description} className="mt-2 line-clamp-2 text-sm text-gray-500" />
+        <RichTextContent html={project.description} className="mt-2 line-clamp-2 text-sm text-gray-500 dark:text-gray-400" />
       ) : (
-        <p className="mt-2 text-sm text-gray-500">No description</p>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">No description</p>
       )}
     </div>
   );

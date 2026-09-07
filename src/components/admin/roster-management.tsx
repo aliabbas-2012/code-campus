@@ -50,11 +50,11 @@ export function RosterManagement(): React.ReactNode {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">Rosters</h1>
-      <p className="mt-1 text-sm text-gray-500">Assign which students belong to each instructor.</p>
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Rosters</h1>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Assign which students belong to each instructor.</p>
 
       <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700">Instructor</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Instructor</label>
         <div className="mt-1">
           <SingleSelect
             options={(instructors ?? []).map((i) => ({ id: i.id, label: i.name, sublabel: i.email }))}
@@ -67,13 +67,13 @@ export function RosterManagement(): React.ReactNode {
 
       {instructorId && (
         <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-gray-900">Current roster</h2>
+          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Current roster</h2>
             <ul className="mt-3 space-y-2">
               {rosterForInstructor.map((link) => (
                 <li key={link.id} className="flex items-center justify-between text-sm">
                   <span>
-                    {link.student.name} <span className="text-gray-400">({link.student.email})</span>
+                    {link.student.name} <span className="text-gray-400 dark:text-gray-500">({link.student.email})</span>
                   </span>
                   <button
                     type="button"
@@ -85,13 +85,13 @@ export function RosterManagement(): React.ReactNode {
                 </li>
               ))}
               {rosterForInstructor.length === 0 && (
-                <p className="text-sm text-gray-400">No students assigned yet.</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">No students assigned yet.</p>
               )}
             </ul>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-gray-900">Add students</h2>
+          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Add students</h2>
             <div className="mt-3">
               <MultiSelect
                 options={availableOptions}

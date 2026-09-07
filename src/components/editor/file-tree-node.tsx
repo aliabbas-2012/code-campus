@@ -11,14 +11,14 @@ export const FOLDER_ICON = (
 );
 
 export const FILE_ICON = (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-gray-400">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500">
     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z" />
     <polyline points="14 2 14 8 20 8" />
   </svg>
 );
 
 const CHEVRON = (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0 text-gray-400">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500">
     <polyline points="9 18 15 12 9 6" />
   </svg>
 );
@@ -49,7 +49,7 @@ export function FileTreeNode({ node, depth }: FileTreeNodeProps): React.ReactNod
   return (
     <div>
       <div
-        className={`group flex items-center gap-1 rounded px-1 py-1 text-sm hover:bg-gray-100 ${
+        className={`group flex items-center gap-1 rounded px-1 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${
           isSelected ? 'bg-indigo-50' : ''
         }`}
         style={{ paddingLeft: `${depth * 16 + 4}px` }}
@@ -73,7 +73,7 @@ export function FileTreeNode({ node, depth }: FileTreeNodeProps): React.ReactNod
               onCancel={ctx.cancelRename}
             />
           ) : (
-            <span className="truncate text-gray-800">{node.name}</span>
+            <span className="truncate text-gray-800 dark:text-gray-200">{node.name}</span>
           )}
         </button>
         {!isRenaming && ctx.mode === 'edit' && (
@@ -85,7 +85,7 @@ export function FileTreeNode({ node, depth }: FileTreeNodeProps): React.ReactNod
                 ctx.startRename(node.id);
               }}
               aria-label="Rename"
-              className="rounded p-0.5 text-gray-400 hover:bg-gray-200 hover:text-gray-700"
+              className="rounded p-0.5 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -99,7 +99,7 @@ export function FileTreeNode({ node, depth }: FileTreeNodeProps): React.ReactNod
                 ctx.requestDelete(node);
               }}
               aria-label="Delete"
-              className="rounded p-0.5 text-gray-400 hover:bg-red-100 hover:text-red-600"
+              className="rounded p-0.5 text-gray-400 dark:text-gray-500 hover:bg-red-100 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
                 <polyline points="3 6 5 6 21 6" />

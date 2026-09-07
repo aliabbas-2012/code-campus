@@ -54,10 +54,10 @@ export default function LoginPage(): React.ReactNode {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-lg shadow-lg p-8">
         <div className="mb-8 flex flex-col items-center">
           <Logo size="lg" />
-          <p className="mt-2 text-center text-gray-600">Learn Python Online</p>
+          <p className="mt-2 text-center text-gray-600 dark:text-gray-400">Learn Python Online</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on">
@@ -68,7 +68,7 @@ export default function LoginPage(): React.ReactNode {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Email
             </label>
             <input
@@ -78,7 +78,7 @@ export default function LoginPage(): React.ReactNode {
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="mt-1 w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               placeholder="your@email.com"
               required
               disabled={loading}
@@ -86,7 +86,7 @@ export default function LoginPage(): React.ReactNode {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Password
             </label>
             <div className="relative mt-1">
@@ -97,7 +97,7 @@ export default function LoginPage(): React.ReactNode {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 pr-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 pr-11 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="••••••••"
                 required
                 disabled={loading}
@@ -108,7 +108,7 @@ export default function LoginPage(): React.ReactNode {
                 disabled={loading}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 aria-pressed={showPassword}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 disabled:opacity-50"
               >
                 {showPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
@@ -134,8 +134,8 @@ export default function LoginPage(): React.ReactNode {
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
             Demo credentials will be available after database setup.
           </p>
         </div>

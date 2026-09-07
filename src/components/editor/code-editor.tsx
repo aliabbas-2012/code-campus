@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Editor, { type OnMount, type Monaco } from '@monaco-editor/react';
 import { useLineComments, useCreateLineComment, useSetLineCommentResolved, useDeleteLineComment } from '@/hooks/use-line-comments';
+import { useTheme } from '@/hooks/use-theme';
 import { useToast } from '@/components/ui/toast';
 import { ApiError } from '@/lib/api';
 import { registerPythonIntelliSense } from '@/lib/python-intellisense';
@@ -49,6 +50,7 @@ interface CodeEditorProps {
 
 export function CodeEditor({ filename, value, onChange, readOnly = false, fileId, canComment = false, viewerRole }: CodeEditorProps): React.ReactNode {
   const { showToast } = useToast();
+  const { theme } = useTheme();
   const { data: comments } = useLineComments(fileId ?? null);
   const createComment = useCreateLineComment(fileId ?? '');
   const setResolved = useSetLineCommentResolved(fileId ?? '');
@@ -215,7 +217,7 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
     const buildThread = (line: number): HTMLElement => {
       const lineComments = commentsByLine.get(line) ?? [];
       const container = document.createElement('div');
-      container.className = 'rounded-md border border-indigo-200 bg-indigo-50/50 p-2 text-xs shadow-sm';
+      container.className = 'rounded-md border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 p-2 text-xs shadow-sm';
       container.style.marginRight = '8px';
       container.style.maxWidth = '480px';
       // Monaco's .view-lines text layer overlaps view-zone DOM in hit-testing order by
@@ -231,32 +233,32 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
 
       const header = document.createElement('div');
       header.className = 'mb-1.5 flex items-center justify-between';
-      header.innerHTML = `<span class="font-semibold text-gray-500">Review thread — line ${line}</span>`;
+      header.innerHTML = `<span class="font-semibold text-gray-500 dark:text-gray-400">Review thread — line ${line}</span>`;
       const closeBtn = document.createElement('button');
       closeBtn.type = 'button';
       closeBtn.textContent = '✕';
-      closeBtn.className = 'px-1 text-gray-400 hover:text-gray-700';
+      closeBtn.className = 'px-1 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200';
       closeBtn.onclick = () => toggleLine(line);
       header.appendChild(closeBtn);
       container.appendChild(header);
 
       for (const c of lineComments) {
         const item = document.createElement('div');
-        item.className = `mb-1.5 rounded p-2 ${c.resolved ? 'bg-gray-100' : 'border border-gray-200 bg-white'}`;
+        item.className = `mb-1.5 rounded p-2 ${c.resolved ? 'bg-gray-100 dark:bg-gray-800' : 'border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900'}`;
 
         const meta = document.createElement('div');
-        meta.className = 'mb-0.5 flex items-center justify-between text-[11px] text-gray-500';
+        meta.className = 'mb-0.5 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400';
         meta.innerHTML = `<span>${escapeHtml(c.author.name)} · ${formatDate(c.created_at)}</span>`;
         if (c.resolved) {
           const badge = document.createElement('span');
-          badge.className = 'text-emerald-600';
+          badge.className = 'text-emerald-600 dark:text-emerald-400';
           badge.textContent = `✓ Resolved${c.resolved_by ? ` by ${c.resolved_by.name}` : ''}`;
           meta.appendChild(badge);
         }
         item.appendChild(meta);
 
         const body = document.createElement('p');
-        body.className = 'whitespace-pre-wrap text-gray-800';
+        body.className = 'whitespace-pre-wrap text-gray-800 dark:text-gray-200';
         body.textContent = c.comment;
         item.appendChild(body);
 
@@ -267,14 +269,14 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.textContent = 'Resolve';
-          btn.className = 'rounded border border-emerald-300 px-2 py-0.5 text-emerald-700 hover:bg-emerald-50';
+          btn.className = 'rounded border border-emerald-300 dark:border-emerald-800 px-2 py-0.5 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10';
           btn.onclick = () => handleToggleResolved(c.id, true);
           actions.appendChild(btn);
         } else if (c.resolved && viewerRole === 'INSTRUCTOR') {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.textContent = 'Reopen';
-          btn.className = 'rounded border border-gray-300 px-2 py-0.5 text-gray-600 hover:bg-gray-100';
+          btn.className = 'rounded border border-gray-300 dark:border-gray-700 px-2 py-0.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800';
           btn.onclick = () => handleToggleResolved(c.id, false);
           actions.appendChild(btn);
         }
@@ -283,7 +285,7 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
           const delBtn = document.createElement('button');
           delBtn.type = 'button';
           delBtn.textContent = 'Delete';
-          delBtn.className = 'rounded border border-red-200 px-2 py-0.5 text-red-600 hover:bg-red-50';
+          delBtn.className = 'rounded border border-red-200 dark:border-red-900 px-2 py-0.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10';
           delBtn.onclick = () => {
             if (window.confirm('Delete this comment? This cannot be undone.')) handleDeleteComment(c.id);
           };
@@ -298,7 +300,7 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
         const textarea = document.createElement('textarea');
         textarea.rows = 2;
         textarea.placeholder = lineComments.length > 0 ? 'Reply…' : 'What should the student notice about this line?';
-        textarea.className = 'mt-1 w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500';
+        textarea.className = 'mt-1 w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500';
         const actionsRow = document.createElement('div');
         actionsRow.className = 'mt-1 flex gap-2';
         const postBtn = document.createElement('button');
@@ -314,13 +316,13 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
         cancelBtn.textContent = 'Cancel';
-        cancelBtn.className = 'rounded px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100';
+        cancelBtn.className = 'rounded px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800';
         cancelBtn.onclick = () => toggleLine(line);
         actionsRow.append(postBtn, cancelBtn);
         container.append(textarea, actionsRow);
       } else if (lineComments.length === 0) {
         const empty = document.createElement('p');
-        empty.className = 'text-gray-400';
+        empty.className = 'text-gray-400 dark:text-gray-500';
         empty.textContent = 'No comments on this line yet.';
         container.appendChild(empty);
       }
@@ -351,6 +353,7 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
         height="100%"
         language={languageForFilename(filename)}
         value={value}
+        theme={theme === 'dark' ? 'vs-dark' : 'light'}
         onChange={(v) => onChange?.(v ?? '')}
         onMount={handleMount}
         options={{
@@ -363,7 +366,7 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
       />
 
       {fileId && commentCount > 0 && (
-        <div className="pointer-events-none absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm">
+        <div className="pointer-events-none absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 shadow-sm">
           💬 {openCount > 0 ? `${openCount} open` : `${commentCount} resolved`}
         </div>
       )}

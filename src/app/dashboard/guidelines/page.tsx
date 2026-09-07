@@ -8,13 +8,13 @@ export default function StudentGuidelinesPage(): React.ReactNode {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">Guidelines</h1>
-      <p className="mt-1 text-sm text-gray-500">Grading criteria and expectations set by your instructor.</p>
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Guidelines</h1>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Grading criteria and expectations set by your instructor.</p>
 
-      <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        {isLoading && <p className="text-sm text-gray-400">Loading…</p>}
+      <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+        {isLoading && <p className="text-sm text-gray-400 dark:text-gray-500">Loading…</p>}
         {!isLoading && (!data || !data.content) && (
-          <p className="text-sm text-gray-400">Your instructor hasn&apos;t published guidelines yet.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Your instructor hasn&apos;t published guidelines yet.</p>
         )}
         {data?.content && <RichTextContent html={data.content} />}
       </div>

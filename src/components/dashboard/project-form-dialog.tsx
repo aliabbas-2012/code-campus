@@ -55,21 +55,21 @@ export function ProjectFormDialog({
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-gray-900 p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
           <div>
-            <label htmlFor="project-name" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="project-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Name
             </label>
             <input
               id="project-name"
               autoFocus
               {...register('name', { required: 'Project name is required', maxLength: 255 })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
               disabled={isSubmitting}
             />
             {errors.name && (
@@ -81,8 +81,8 @@ export function ProjectFormDialog({
           </div>
 
           <div>
-            <p className="block text-sm font-medium text-gray-700">
-              Description <span className="text-gray-400">(optional)</span>
+            <p className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Description <span className="text-gray-400 dark:text-gray-500">(optional)</span>
             </p>
             <div className="mt-1">
               <Controller
@@ -104,7 +104,7 @@ export function ProjectFormDialog({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>

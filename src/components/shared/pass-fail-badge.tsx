@@ -1,5 +1,5 @@
 export function PassFailBadge({ passed }: { passed: boolean | null }): React.ReactNode {
-  if (passed === null) return <span className="text-gray-400">—</span>;
+  if (passed === null) return <span className="text-gray-400 dark:text-gray-500">—</span>;
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${

@@ -21,7 +21,7 @@ export function AssignmentList(): React.ReactNode {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Assignments</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Assignments</h1>
         <button
           type="button"
           onClick={() => setShowCreate(true)}
@@ -31,7 +31,7 @@ export function AssignmentList(): React.ReactNode {
         </button>
       </div>
 
-      {isLoading && <p className="mt-4 text-sm text-gray-400">Loading…</p>}
+      {isLoading && <p className="mt-4 text-sm text-gray-400 dark:text-gray-500">Loading…</p>}
       {isError && <p className="mt-4 text-sm text-red-600">Failed to load assignments.</p>}
 
       {!isLoading && !isError && (
@@ -41,17 +41,17 @@ export function AssignmentList(): React.ReactNode {
               key={a.id}
               type="button"
               onClick={() => router.push(`/instructor/assignments/${a.id}`)}
-              className="rounded-xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+              className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
             >
-              <h3 className="font-semibold text-gray-900">{a.title}</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{a.title}</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {a._count.assigned_students} student{a._count.assigned_students === 1 ? '' : 's'} · pass at{' '}
                 {a.pass_threshold}/{a.max_score}
               </p>
             </button>
           ))}
           {assignments?.length === 0 && (
-            <p className="text-sm text-gray-400">No assignments yet — create one to get started.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">No assignments yet — create one to get started.</p>
           )}
         </div>
       )}

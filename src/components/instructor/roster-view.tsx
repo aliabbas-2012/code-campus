@@ -60,8 +60,8 @@ export function RosterView(): React.ReactNode {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">My Students</h1>
-      <p className="mt-1 text-sm text-gray-500">
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">My Students</h1>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Assigned by an admin. Contact an admin to add or remove students from your roster.
       </p>
 
@@ -73,9 +73,9 @@ export function RosterView(): React.ReactNode {
             setPage(1);
           }}
           placeholder="Search by name or email…"
-          className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-1.5 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full max-w-xs rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-1.5 text-sm shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
         />
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <label htmlFor="roster-page-size">Rows per page</label>
           <select
             id="roster-page-size"
@@ -84,7 +84,7 @@ export function RosterView(): React.ReactNode {
               setPageSize(Number(e.target.value));
               setPage(1);
             }}
-            className="rounded-lg border border-gray-300 px-2 py-1 text-sm shadow-sm"
+            className="rounded-lg border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm shadow-sm dark:bg-gray-900 dark:text-gray-100"
           >
             {PAGE_SIZE_OPTIONS.map((size) => (
               <option key={size} value={size}>
@@ -95,12 +95,12 @@ export function RosterView(): React.ReactNode {
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-        {isLoading && <p className="p-4 text-sm text-gray-400">Loading…</p>}
+      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+        {isLoading && <p className="p-4 text-sm text-gray-400 dark:text-gray-500">Loading…</p>}
         {isError && <p className="p-4 text-sm text-red-600">Failed to load your roster.</p>}
         {!isLoading && !isError && (
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50/60 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <thead className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/60 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 dark:bg-gray-800/60">
               <tr>
                 <th className="cursor-pointer px-4 py-3 hover:text-gray-700" onClick={() => toggleSort('name')}>
                   Name {sortArrow('name')}
@@ -111,11 +111,11 @@ export function RosterView(): React.ReactNode {
                 <th className="px-4 py-3">Activity</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {paged.map((link) => (
-                <tr key={link.id} onClick={() => handleRowClick(link)} className="cursor-pointer hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{link.student.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{link.student.email}</td>
+                <tr key={link.id} onClick={() => handleRowClick(link)} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{link.student.name}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{link.student.email}</td>
                   <td className="px-4 py-3">
                     <StudentAggregateCell studentId={link.student.id} />
                   </td>
@@ -123,7 +123,7 @@ export function RosterView(): React.ReactNode {
               ))}
               {paged.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={3} className="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
                     {search ? 'No students match your search.' : 'No students assigned to you yet.'}
                   </td>
                 </tr>
@@ -134,7 +134,7 @@ export function RosterView(): React.ReactNode {
       </div>
 
       {!isLoading && !isError && total > 0 && (
-        <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
+        <div className="mt-3 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
           <span>
             {(clampedPage - 1) * pageSize + 1}–{Math.min(clampedPage * pageSize, total)} of {total}
           </span>
@@ -143,18 +143,18 @@ export function RosterView(): React.ReactNode {
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={clampedPage <= 1}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
             >
               Previous
             </button>
-            <span className="px-2 py-1 text-xs text-gray-500">
+            <span className="px-2 py-1 text-xs text-gray-500 dark:text-gray-400">
               Page {clampedPage} of {totalPages}
             </span>
             <button
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={clampedPage >= totalPages}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
             >
               Next
             </button>

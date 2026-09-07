@@ -2,10 +2,16 @@ import type { AssignmentStats } from '@/lib/assignment-stats';
 
 function Card({ label, value, tone }: { label: string; value: string; tone?: 'emerald' | 'red' | 'indigo' }): React.ReactNode {
   const toneClass =
-    tone === 'emerald' ? 'text-emerald-600' : tone === 'red' ? 'text-red-600' : tone === 'indigo' ? 'text-indigo-600' : 'text-gray-900';
+    tone === 'emerald'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : tone === 'red'
+        ? 'text-red-600 dark:text-red-400'
+        : tone === 'indigo'
+          ? 'text-indigo-600 dark:text-indigo-400'
+          : 'text-gray-900 dark:text-gray-100';
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</p>
       <p className={`mt-1 text-2xl font-bold tracking-tight ${toneClass}`}>{value}</p>
     </div>
   );

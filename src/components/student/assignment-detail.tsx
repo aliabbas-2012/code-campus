@@ -28,7 +28,7 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
   const { showToast } = useToast();
   const router = useRouter();
 
-  if (isLoading) return <div className="mx-auto max-w-3xl text-sm text-gray-400">Loading…</div>;
+  if (isLoading) return <div className="mx-auto max-w-3xl text-sm text-gray-400 dark:text-gray-500">Loading…</div>;
   if (isError || !assignment) {
     return <div className="mx-auto max-w-3xl text-sm text-red-600">Failed to load assignment.</div>;
   }
@@ -45,8 +45,8 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-bold tracking-tight text-gray-900">{assignment.title}</h1>
-      <p className="mt-2 text-sm text-gray-500">
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{assignment.title}</h1>
+      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
         From{' '}
         <button
           type="button"
@@ -58,12 +58,12 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
         · pass at {assignment.pass_threshold}/{assignment.max_score}
       </p>
 
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
         {!assignment.project_id ? (
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Status</h2>
-              <p className="mt-1 text-sm text-gray-600">You haven&apos;t started this assignment yet.</p>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">You haven&apos;t started this assignment yet.</p>
             </div>
             <button
               type="button"
@@ -78,7 +78,7 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
           <>
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Status</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</h2>
                 <p className="mt-1.5 flex items-center gap-2 text-sm font-medium text-gray-800">
                   {STATUS_LABELS[status]}
                   {status === 'GRADED' && (
@@ -107,9 +107,9 @@ export function AssignmentDetail({ assignmentId }: { assignmentId: string }): Re
       </div>
 
       {assignment.description && (
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Description</h2>
-          <RichTextContent html={assignment.description} className="mt-3 text-gray-700" />
+        <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Description</h2>
+          <RichTextContent html={assignment.description} className="mt-3 text-gray-700 dark:text-gray-300" />
         </div>
       )}
     </div>

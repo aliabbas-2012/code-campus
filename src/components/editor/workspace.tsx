@@ -313,12 +313,12 @@ export function Workspace({
   }
 
   return (
-    <div className="flex h-screen flex-col bg-white">
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+    <div className="flex h-screen flex-col bg-white dark:bg-gray-900">
+      <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 px-4 py-2">
         <button
           type="button"
           onClick={onBack ?? (() => router.push('/dashboard/projects'))}
-          className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
             <polyline points="15 18 9 12 15 6" />
@@ -336,7 +336,7 @@ export function Workspace({
               <button
                 type="button"
                 onClick={() => setShowPackages((v) => !v)}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Packages
               </button>
@@ -364,7 +364,7 @@ export function Workspace({
       {extraBar}
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 shrink-0 border-r border-gray-200 overflow-y-auto">
+        <aside className="w-64 shrink-0 border-r border-gray-200 dark:border-gray-800 overflow-y-auto">
           <FileTree projectId={projectId} onOpenFile={handleOpenFile} mode={effectiveMode} />
         </aside>
 
@@ -380,7 +380,7 @@ export function Workspace({
             {activeTab ? (
               <>
                 {effectiveMode === 'edit' && activeTab.saveStatus === 'conflict' && (
-                  <div className="flex items-center justify-between bg-amber-50 px-4 py-2 text-sm text-amber-800">
+                  <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-500/10 px-4 py-2 text-sm text-amber-800 dark:text-amber-400">
                     <span>This file changed elsewhere since you opened it. Your local changes have not been saved.</span>
                     <button
                       type="button"
@@ -404,25 +404,25 @@ export function Workspace({
                 </div>
               </>
             ) : (
-              <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
+              <div className="flex flex-1 items-center justify-center text-sm text-gray-400 dark:text-gray-500">
                 {openingFileId ? 'Opening file…' : 'Select a file to start editing'}
               </div>
             )}
           </div>
 
-          <div className="flex h-56 shrink-0 flex-col border-t border-gray-200">
-            <div className="flex shrink-0 gap-1 border-b border-gray-200 bg-gray-50 px-2 py-1">
+          <div className="flex h-56 shrink-0 flex-col border-t border-gray-200 dark:border-gray-800">
+            <div className="flex shrink-0 gap-1 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 px-2 py-1">
               <button
                 type="button"
                 onClick={() => setBottomTab('output')}
-                className={`rounded px-2 py-1 text-xs font-medium ${bottomTab === 'output' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`rounded px-2 py-1 text-xs font-medium ${bottomTab === 'output' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
               >
                 Output
               </button>
               <button
                 type="button"
                 onClick={handleOpenShell}
-                className={`rounded px-2 py-1 text-xs font-medium ${bottomTab === 'shell' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`rounded px-2 py-1 text-xs font-medium ${bottomTab === 'shell' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
               >
                 Shell
               </button>

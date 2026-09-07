@@ -45,11 +45,11 @@ export function StudentAssignments({ studentId }: { studentId: string }): React.
 
   return (
     <div>
-      <button type="button" onClick={() => router.push('/instructor/students')} className="text-sm font-medium text-gray-500 hover:text-gray-700">
+      <button type="button" onClick={() => router.push('/instructor/students')} className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700">
         ← My Students
       </button>
       <div className="mt-2 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
           Assignments{student ? ` — ${student.name}` : ''}
         </h1>
         {student && (
@@ -70,31 +70,31 @@ export function StudentAssignments({ studentId }: { studentId: string }): React.
       )}
 
       {profile && (
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Profile</h2>
+        <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Profile</h2>
           <div className="mt-3">
             <StudentProfileCard bio={profile.bio} interests={profile.interests} />
           </div>
         </div>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        {isLoading && <p className="p-4 text-sm text-gray-400">Loading…</p>}
+      <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+        {isLoading && <p className="p-4 text-sm text-gray-400 dark:text-gray-500">Loading…</p>}
         {isError && <p className="p-4 text-sm text-red-600">Failed to load assignments for this student.</p>}
         {!isLoading && !isError && (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {assignments?.map((a) => (
               <li key={a.id}>
                 <button
                   type="button"
                   onClick={() => goTo(a)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
+                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <span>
-                    <span className="block font-medium text-gray-900">{a.title}</span>
-                    <span className="text-xs text-gray-500">pass at {a.pass_threshold}/{a.max_score}</span>
+                    <span className="block font-medium text-gray-900 dark:text-gray-100">{a.title}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">pass at {a.pass_threshold}/{a.max_score}</span>
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {a.submission ? STATUS_LABELS[a.submission.status] : 'Not started'}
                     {a.submission?.status === 'GRADED' && ` — ${a.submission.score}/${a.max_score}`}
                   </span>
@@ -102,7 +102,7 @@ export function StudentAssignments({ studentId }: { studentId: string }): React.
               </li>
             ))}
             {assignments?.length === 0 && (
-              <li className="px-4 py-8 text-center text-sm text-gray-400">No assignments given to this student yet.</li>
+              <li className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">No assignments given to this student yet.</li>
             )}
           </ul>
         )}

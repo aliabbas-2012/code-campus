@@ -122,7 +122,7 @@ export function MultiSelect({
   return (
     <div className="relative">
       <div
-        className="flex min-h-[42px] flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-indigo-500"
+        className="flex min-h-[42px] flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 px-2 py-1.5 focus-within:border-transparent focus-within:ring-2 focus-within:ring-indigo-500"
         onClick={() => inputRef.current?.focus()}
       >
         {selectedOptions.map((opt) => (
@@ -157,9 +157,9 @@ export function MultiSelect({
       </div>
 
       {open && (filtered.length > 0 || canCreate || isSearching) && (
-        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1 shadow-lg dark:border-gray-700">
           {isSearching && (
-            <li className="px-3 py-1.5 text-xs text-gray-400">Searching…</li>
+            <li className="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-500">Searching…</li>
           )}
           {filtered.map((opt) => (
             <li key={opt.id}>
@@ -169,8 +169,8 @@ export function MultiSelect({
                 onClick={() => addOption(opt.id)}
                 className="flex w-full flex-col px-3 py-1.5 text-left text-sm hover:bg-indigo-50"
               >
-                <span className="text-gray-900">{opt.label}</span>
-                {opt.sublabel && <span className="text-xs text-gray-400">{opt.sublabel}</span>}
+                <span className="text-gray-900 dark:text-gray-100">{opt.label}</span>
+                {opt.sublabel && <span className="text-xs text-gray-400 dark:text-gray-500">{opt.sublabel}</span>}
               </button>
             </li>
           ))}

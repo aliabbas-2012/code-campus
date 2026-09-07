@@ -60,7 +60,7 @@ export function UserManagement(): React.ReactNode {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Users</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Users</h1>
         <button
           type="button"
           onClick={() => setShowCreate(true)}
@@ -70,7 +70,7 @@ export function UserManagement(): React.ReactNode {
         </button>
       </div>
 
-      <div className="mt-4 flex gap-1 border-b border-gray-200">
+      <div className="mt-4 flex gap-1 border-b border-gray-200 dark:border-gray-800">
         {TABS.map((tab) => (
           <button
             key={tab.label}
@@ -96,9 +96,9 @@ export function UserManagement(): React.ReactNode {
             setPage(1);
           }}
           placeholder="Search by name or email…"
-          className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+          className="w-full max-w-xs rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-indigo-500"
         />
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <label htmlFor="page-size">Rows per page</label>
           <select
             id="page-size"
@@ -107,7 +107,7 @@ export function UserManagement(): React.ReactNode {
               setPageSize(Number(e.target.value));
               setPage(1);
             }}
-            className="rounded-lg border border-gray-300 px-2 py-1 text-sm"
+            className="rounded-lg border border-gray-300 dark:border-gray-700 px-2 py-1 text-sm"
           >
             {PAGE_SIZE_OPTIONS.map((size) => (
               <option key={size} value={size}>
@@ -118,12 +118,12 @@ export function UserManagement(): React.ReactNode {
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-        {isLoading && <p className="p-4 text-sm text-gray-400">Loading…</p>}
+      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+        {isLoading && <p className="p-4 text-sm text-gray-400 dark:text-gray-500">Loading…</p>}
         {isError && <p className="p-4 text-sm text-red-600">Failed to load users.</p>}
         {!isLoading && !isError && (
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50/60 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <thead className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/60 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 dark:bg-gray-800/60">
               <tr>
                 <th className="cursor-pointer px-4 py-2 hover:text-gray-700" onClick={() => toggleSort('name')}>
                   Name {sortArrow('name')}
@@ -141,14 +141,14 @@ export function UserManagement(): React.ReactNode {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {data?.items.map((user) => (
                 <tr
                   key={user.id}
                   onClick={() => router.push(`/admin/users/${user.id}`)}
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
-                  <td className="px-4 py-3 font-medium text-gray-900">
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                     {user.name}
                     {user.is_super_admin && (
                       <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
@@ -156,20 +156,20 @@ export function UserManagement(): React.ReactNode {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{user.email}</td>
-                  <td className="px-4 py-3 text-gray-600">{user.role}</td>
-                  <td className="px-4 py-3 text-gray-600">{user.status}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{user.email}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{user.role}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{user.status}</td>
                   <td className="px-4 py-3">
                     <UserAggregateCell userId={user.id} role={user.role} />
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                     {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
                   </td>
                 </tr>
               ))}
               {data?.items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 dark:text-gray-500">
                     No users found.
                   </td>
                 </tr>
@@ -180,7 +180,7 @@ export function UserManagement(): React.ReactNode {
       </div>
 
       {!isLoading && !isError && total > 0 && (
-        <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
+        <div className="mt-3 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
           <span>
             {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
           </span>
@@ -189,18 +189,18 @@ export function UserManagement(): React.ReactNode {
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
             >
               Previous
             </button>
-            <span className="px-2 py-1 text-xs text-gray-500">
+            <span className="px-2 py-1 text-xs text-gray-500 dark:text-gray-400">
               Page {page} of {totalPages}
             </span>
             <button
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
             >
               Next
             </button>

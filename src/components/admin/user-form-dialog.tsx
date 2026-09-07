@@ -36,54 +36,54 @@ export function UserFormDialog({ isSubmitting, submitError, onSubmit, onClose }:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 shadow-lg"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-gray-900 p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-gray-900">New User</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">New User</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4">
           <div>
-            <label htmlFor="user-name" className="block text-sm font-medium text-gray-700">Name</label>
+            <label htmlFor="user-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
             <input
               id="user-name"
               autoFocus
               {...register('name', { required: 'Name is required', maxLength: 255 })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
               disabled={isSubmitting}
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
           </div>
 
           <div>
-            <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="user-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
             <input
               id="user-email"
               type="email"
               {...register('email', { required: 'Email is required' })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
               disabled={isSubmitting}
             />
             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
           </div>
 
           <div>
-            <label htmlFor="user-password" className="block text-sm font-medium text-gray-700">Password</label>
+            <label htmlFor="user-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
             <input
               id="user-password"
               type="password"
               {...register('password', { required: 'Password is required', minLength: { value: 8, message: 'At least 8 characters' } })}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
               disabled={isSubmitting}
             />
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
           </div>
 
           <div>
-            <label htmlFor="user-role" className="block text-sm font-medium text-gray-700">Role</label>
+            <label htmlFor="user-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
             <select
               id="user-role"
               {...register('role')}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 shadow-sm transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
               disabled={isSubmitting}
             >
               <option value="STUDENT">Student</option>
@@ -99,7 +99,7 @@ export function UserFormDialog({ isSubmitting, submitError, onSubmit, onClose }:
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
