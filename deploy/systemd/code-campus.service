@@ -1,0 +1,33 @@
+# systemd unit for the Code Campus Next.js process.
+#
+# Install: sudo cp deploy/systemd/code-campus.service /etc/systemd/system/
+#          sudo systemctl daemon-reload
+#          sudo systemctl enable --now code-campus
+#
+# Adjust User, WorkingDirectory and the node binary path below to match your
+# server (see deploy/DEPLOYMENT.md Step 3 for why the node path is absolute —
+# systemd doesn't source your shell's nvm setup).
+
+[Unit]
+Description=Code Campus (Next.js)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=codecampus
+Group=codecampus
+WorkingDirectory=/var/www/code-campus
+EnvironmentFile=/var/www/code-campus/.env.local
+ExecStart=/home/codecampus/.nvm/versions/node/v24.20.0/bin/node node_modules/.bin/next start -p 3007 -H 127.0.0.1
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=code-campus
+
+# Only reachable via the Apache reverse proxy on this host.
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

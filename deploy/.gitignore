@@ -1,0 +1,10 @@
+# Real production secrets/certs never belong in git — only the .example
+# template above is tracked. Copy it to .env.production, fill in real values,
+# and transfer it to the server out-of-band (scp, a secrets manager, etc.).
+.env.production
+
+# In case a real cert/key ever gets dropped here for reference — it shouldn't,
+# Let's Encrypt certs live in /etc/letsencrypt on the server, not in the repo.
+*.pem
+*.key
+*.crt
