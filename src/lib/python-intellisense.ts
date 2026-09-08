@@ -1,4 +1,5 @@
 import type { Monaco } from '@monaco-editor/react';
+import type { editor, Position } from 'monaco-editor';
 
 export interface ModuleMember {
   name: string;
@@ -134,7 +135,10 @@ export function registerPythonIntelliSense(monaco: Monaco): void {
 
   monaco.languages.registerCompletionItemProvider('python', {
     triggerCharacters: ['.', ' '],
-    provideCompletionItems: async (model, position) => {
+    provideCompletionItems: async (
+      model: editor.ITextModel,
+      position: Position) => {
+        
       const ctx = pythonIntelliSenseContext;
       const textUntil = model.getValueInRange({
         startLineNumber: position.lineNumber,
