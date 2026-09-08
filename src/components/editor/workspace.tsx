@@ -12,6 +12,7 @@ import { useAutosave } from '@/hooks/use-autosave';
 import { useProject } from '@/hooks/use-projects';
 import { useProjectFiles } from '@/hooks/use-files';
 import { useSubmission } from '@/hooks/use-submission';
+import { useEditorFontSize } from '@/hooks/use-editor-font-size';
 import { pythonIntelliSenseContext, loadInstalledPackageNames, extractTopLevelSymbols } from '@/lib/python-intellisense';
 import { FileTree } from './file-tree';
 import { EditorTabs } from './editor-tabs';
@@ -22,8 +23,22 @@ import { SubmissionBar } from './submission-bar';
 import { PackageManager } from './package-manager';
 import { PythonShell } from './python-shell';
 import { StorageQuotaBar } from '@/components/dashboard/storage-quota-bar';
+import { ResizeHandle } from '@/components/shared/resize-handle';
 import type { OpenTab } from './types';
 import type { FileNode } from '@/types/api';
+
+const OUTPUT_HEIGHT_KEY = 'code-campus-output-panel-height';
+const REVIEW_PANEL_HEIGHT_KEY = 'code-campus-review-panel-height';
+const OUTPUT_HEIGHT_MIN = 100;
+const OUTPUT_HEIGHT_MAX = 640;
+const OUTPUT_HEIGHT_DEFAULT = 224;
+const REVIEW_PANEL_HEIGHT_MIN = 140;
+const REVIEW_PANEL_HEIGHT_MAX = 640;
+const REVIEW_PANEL_HEIGHT_DEFAULT = 280;
+
+function clampHeight(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
 
 interface WorkspaceProps {
   projectId: string;
@@ -63,6 +78,7 @@ export function Workspace({
   const { data: project } = useProject(projectId);
   const { data: projectFiles } = useProjectFiles(projectId);
   const { data: submission } = useSubmission(mode === 'edit' && project?.assignment_id ? projectId : null);
+  const { fontSize, increaseFontSize, decreaseFontSize, resetFontSize } = useEditorFontSize();
 
   // A student's assignment-linked project always has a canonical /dashboard/assignments/:id/workspace
   // URL; visiting /projects/:id directly redirects there so back-navigation and browser history stay consistent.
@@ -78,10 +94,53 @@ export function Workspace({
   const [showPackages, setShowPackages] = useState(false);
   const [bottomTab, setBottomTab] = useState<'output' | 'shell'>('output');
   const [shellMounted, setShellMounted] = useState(false);
+  const [outputHeight, setOutputHeight] = useState(OUTPUT_HEIGHT_DEFAULT);
+  const [reviewPanelHeight, setReviewPanelHeight] = useState(REVIEW_PANEL_HEIGHT_DEFAULT);
   const mountedFingerprintRef = useRef<string | null>(null);
   const mountInFlightRef = useRef<Promise<void> | null>(null);
   const autoInstalledRef = useRef(false);
   const autoOpenedRef = useRef(false);
+
+  // Restore any previously-dragged panel sizes — deferred to a client-only effect (rather than
+  // read eagerly in useState) so the server-rendered and first-client-render markup match.
+  useEffect(() => {
+    queueMicrotask(() => {
+      try {
+        const storedOutput = localStorage.getItem(OUTPUT_HEIGHT_KEY);
+        if (storedOutput) setOutputHeight(clampHeight(Number(storedOutput), OUTPUT_HEIGHT_MIN, OUTPUT_HEIGHT_MAX));
+        const storedReview = localStorage.getItem(REVIEW_PANEL_HEIGHT_KEY);
+        if (storedReview) setReviewPanelHeight(clampHeight(Number(storedReview), REVIEW_PANEL_HEIGHT_MIN, REVIEW_PANEL_HEIGHT_MAX));
+      } catch {
+        // Best-effort only — fall back to the defaults already in state.
+      }
+    });
+  }, []);
+
+  const handleOutputResize = useCallback((deltaY: number): void => {
+    setOutputHeight((prev) => {
+      // The handle sits above the output panel — dragging it down shrinks the panel below it.
+      const next = clampHeight(prev - deltaY, OUTPUT_HEIGHT_MIN, OUTPUT_HEIGHT_MAX);
+      try {
+        localStorage.setItem(OUTPUT_HEIGHT_KEY, String(next));
+      } catch {
+        // Best-effort persistence only.
+      }
+      return next;
+    });
+  }, []);
+
+  const handleReviewPanelResize = useCallback((deltaY: number): void => {
+    setReviewPanelHeight((prev) => {
+      // The handle sits below the review panel — dragging it down grows the panel above it.
+      const next = clampHeight(prev + deltaY, REVIEW_PANEL_HEIGHT_MIN, REVIEW_PANEL_HEIGHT_MAX);
+      try {
+        localStorage.setItem(REVIEW_PANEL_HEIGHT_KEY, String(next));
+      } catch {
+        // Best-effort persistence only.
+      }
+      return next;
+    });
+  }, []);
 
   // Once submitted, a student's own files lock until the instructor grades/requests
   // revision, or the student cancels the review request — matches a real review workflow.
@@ -345,6 +404,38 @@ export function Workspace({
           </div>
         )}
         <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-0.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-1 py-1"
+            role="group"
+            aria-label="Editor font size"
+          >
+            <button
+              type="button"
+              onClick={decreaseFontSize}
+              aria-label="Decrease font size"
+              title="Decrease font size"
+              className="rounded px-1.5 py-0.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              A&#8211;
+            </button>
+            <button
+              type="button"
+              onClick={resetFontSize}
+              title="Reset font size"
+              className="w-8 rounded px-1 py-0.5 text-center text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              {fontSize}
+            </button>
+            <button
+              type="button"
+              onClick={increaseFontSize}
+              aria-label="Increase font size"
+              title="Increase font size"
+              className="rounded px-1.5 py-0.5 text-base font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              A+
+            </button>
+          </div>
           {mode === 'edit' && (
             <div className="relative">
               <button
@@ -378,7 +469,14 @@ export function Workspace({
       </div>
 
       {mode === 'edit' && project?.assignment_id && <SubmissionBar projectId={projectId} />}
-      {extraBar}
+      {extraBar && (
+        <>
+          <div style={{ height: reviewPanelHeight }} className="shrink-0 overflow-y-auto">
+            {extraBar}
+          </div>
+          <ResizeHandle onResize={handleReviewPanelResize} />
+        </>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-64 shrink-0 border-r border-gray-200 dark:border-gray-800 overflow-y-auto">
@@ -417,6 +515,7 @@ export function Workspace({
                     fileId={activeTab.fileId}
                     canComment={mode === 'review'}
                     viewerRole={session?.user?.role}
+                    fontSize={fontSize}
                   />
                 </div>
               </>
@@ -427,7 +526,8 @@ export function Workspace({
             )}
           </div>
 
-          <div className="flex h-56 shrink-0 flex-col border-t border-gray-200 dark:border-gray-800">
+          <ResizeHandle onResize={handleOutputResize} />
+          <div style={{ height: outputHeight }} className="flex shrink-0 flex-col">
             <div className="flex shrink-0 gap-1 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 px-2 py-1">
               <button
                 type="button"

@@ -46,9 +46,10 @@ interface CodeEditorProps {
   fileId?: string;
   canComment?: boolean;
   viewerRole?: 'STUDENT' | 'INSTRUCTOR' | 'ADMIN';
+  fontSize?: number;
 }
 
-export function CodeEditor({ filename, value, onChange, readOnly = false, fileId, canComment = false, viewerRole }: CodeEditorProps): React.ReactNode {
+export function CodeEditor({ filename, value, onChange, readOnly = false, fileId, canComment = false, viewerRole, fontSize = 14 }: CodeEditorProps): React.ReactNode {
   const { showToast } = useToast();
   const { theme } = useTheme();
   const { data: comments } = useLineComments(fileId ?? null);
@@ -358,7 +359,7 @@ export function CodeEditor({ filename, value, onChange, readOnly = false, fileId
         onMount={handleMount}
         options={{
           minimap: { enabled: false },
-          fontSize: 14,
+          fontSize,
           automaticLayout: true,
           readOnly,
           glyphMargin: true,
